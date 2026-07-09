@@ -8,10 +8,6 @@ use anchor_spl::token_interface::Token2022;
 use anchor_spl::token_interface::TokenAccount;
 #[derive(Accounts)]
 pub struct CollectFundFee<'info> {
-    /// Only admin or fund_owner can collect fee now
-    #[account(constraint = (owner.key() == amm_config.fund_owner || owner.key() == crate::admin::ID) @ ErrorCode::InvalidOwner)]
-    pub owner: Signer<'info>,
-
     /// CHECK: pool vault and lp mint authority
     #[account(
         seeds = [
@@ -56,17 +52,11 @@ pub struct CollectFundFee<'info> {
     pub vault_1_mint: Box<InterfaceAccount<'info, Mint>>,
 
     /// The address that receives the collected token_0 fund fees
-    #[account(
-        mut,
-        constraint = recipient_token_0_account.owner == amm_config.fund_fee_recipient_owner @ ErrorCode::InvalidFeeRecipient
-    )]
+    #[account(mut)]
     pub recipient_token_0_account: Box<InterfaceAccount<'info, TokenAccount>>,
 
     /// The address that receives the collected token_1 fund fees
-    #[account(
-        mut,
-        constraint = recipient_token_1_account.owner == amm_config.fund_fee_recipient_owner @ ErrorCode::InvalidFeeRecipient
-    )]
+    #[account(mut)]
     pub recipient_token_1_account: Box<InterfaceAccount<'info, TokenAccount>>,
 
     /// The SPL program to perform token transfers
@@ -81,6 +71,17 @@ pub fn collect_fund_fee(
     amount_0_requested: u64,
     amount_1_requested: u64,
 ) -> Result<()> {
+    validate_fee_recipient(
+        &ctx.accounts.amm_config,
+        &ctx.accounts.recipient_token_0_account,
+        &ctx.accounts.vault_0_mint,
+    )?;
+    validate_fee_recipient(
+        &ctx.accounts.amm_config,
+        &ctx.accounts.recipient_token_1_account,
+        &ctx.accounts.vault_1_mint,
+    )?;
+
     let amount_0: u64;
     let amount_1: u64;
     let auth_bump: u8;
@@ -88,6 +89,7 @@ pub fn collect_fund_fee(
         let mut pool_state = ctx.accounts.pool_state.load_mut()?;
         amount_0 = amount_0_requested.min(pool_state.fund_fees_token_0);
         amount_1 = amount_1_requested.min(pool_state.fund_fees_token_1);
+        require!(amount_0 > 0 || amount_1 > 0, ErrorCode::NoFeeCollect);
 
         pool_state.fund_fees_token_0 = pool_state.fund_fees_token_0.checked_sub(amount_0).unwrap();
         pool_state.fund_fees_token_1 = pool_state.fund_fees_token_1.checked_sub(amount_1).unwrap();
@@ -124,5 +126,28 @@ pub fn collect_fund_fee(
         &[&[crate::AUTH_SEED.as_bytes(), &[auth_bump]]],
     )?;
 
+    Ok(())
+}
+
+fn validate_fee_recipient(
+    amm_config: &Account<AmmConfig>,
+    recipient: &InterfaceAccount<TokenAccount>,
+    vault_mint: &InterfaceAccount<Mint>,
+) -> Result<()> {
+    require_keys_eq!(
+        recipient.mint,
+        vault_mint.key(),
+        ErrorCode::InvalidFeeRecipient
+    );
+    require_keys_eq!(
+        recipient.owner,
+        amm_config.treasury_authority()?,
+        ErrorCode::InvalidFeeRecipient
+    );
+    require_keys_eq!(
+        recipient.key(),
+        amm_config.expected_fee_receiver(vault_mint.key())?,
+        ErrorCode::InvalidFeeRecipient
+    );
     Ok(())
 }

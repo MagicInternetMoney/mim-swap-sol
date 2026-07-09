@@ -42,4 +42,6 @@ pub enum ErrorCode {
     NoFeeCollect,
     #[msg("Invalid fee recipient")]
     InvalidFeeRecipient,
+    #[msg("Invalid treasury fee config")]
+    InvalidTreasuryFeeConfig,
 }

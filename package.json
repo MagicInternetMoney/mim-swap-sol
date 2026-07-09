@@ -1,5 +1,8 @@
 {
     "scripts": {
+        "keys:setup": "bash scripts/setup-owned-keys.sh",
+        "test:mana-local": "bash scripts/test-mana-local.sh",
+        "test:fee-sweep-local": "bash scripts/test-fee-sweep-local.sh",
         "lint:fix": "prettier */*.js \"*/**/*{.js,.ts}\" -w",
         "lint": "prettier */*.js \"*/**/*{.js,.ts}\" --check"
     },

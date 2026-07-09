@@ -15,6 +15,7 @@ pub struct UpdateAmmConfig<'info> {
 }
 
 pub fn update_amm_config(ctx: Context<UpdateAmmConfig>, param: u8, value: u64) -> Result<()> {
+    let remaining_account_key = ctx.remaining_accounts.first().map(|account| *account.key);
     let amm_config = &mut ctx.accounts.amm_config;
     let match_param = Some(param);
     match match_param {
@@ -22,28 +23,36 @@ pub fn update_amm_config(ctx: Context<UpdateAmmConfig>, param: u8, value: u64) -
         Some(1) => update_protocol_fee_rate(amm_config, value),
         Some(2) => update_fund_fee_rate(amm_config, value),
         Some(3) => {
-            let new_procotol_owner = *ctx.remaining_accounts.iter().next().unwrap().key;
+            let new_procotol_owner = required_remaining_key(remaining_account_key)?;
             set_new_protocol_owner(amm_config, new_procotol_owner)?;
         }
         Some(4) => {
-            let new_fund_owner = *ctx.remaining_accounts.iter().next().unwrap().key;
+            let new_fund_owner = required_remaining_key(remaining_account_key)?;
             set_new_fund_owner(amm_config, new_fund_owner)?;
         }
         Some(5) => amm_config.create_pool_fee = value,
         Some(6) => amm_config.disable_create_pool = if value == 0 { false } else { true },
         Some(7) => update_creator_fee_rate(amm_config, value),
         Some(8) => {
-            let new_recipient_owner = *ctx.remaining_accounts.iter().next().unwrap().key;
-            set_new_protocol_fee_recipient_owner(amm_config, new_recipient_owner)?;
+            let treasury_program = required_remaining_key(remaining_account_key)?;
+            set_treasury_program(amm_config, treasury_program)?;
         }
         Some(9) => {
-            let new_recipient_owner = *ctx.remaining_accounts.iter().next().unwrap().key;
-            set_new_fund_fee_recipient_owner(amm_config, new_recipient_owner)?;
+            let treasury_state = required_remaining_key(remaining_account_key)?;
+            set_treasury_state(amm_config, treasury_state)?;
+        }
+        Some(10) => {
+            let mim_mint = required_remaining_key(remaining_account_key)?;
+            set_mim_mint(amm_config, mim_mint)?;
         }
         _ => return err!(ErrorCode::InvalidInput),
     }
 
     Ok(())
+}
+
+fn required_remaining_key(account_key: Option<Pubkey>) -> Result<Pubkey> {
+    account_key.ok_or(ErrorCode::InvalidInput.into())
 }
 
 fn update_protocol_fee_rate(amm_config: &mut Account<AmmConfig>, protocol_fee_rate: u64) {
@@ -92,20 +101,23 @@ fn set_new_fund_owner(amm_config: &mut Account<AmmConfig>, new_fund_owner: Pubke
     Ok(())
 }
 
-fn set_new_protocol_fee_recipient_owner(
+fn set_treasury_program(
     amm_config: &mut Account<AmmConfig>,
-    new_recipient_owner: Pubkey,
+    treasury_program: Pubkey,
 ) -> Result<()> {
-    require_keys_neq!(new_recipient_owner, Pubkey::default());
-    amm_config.protocol_fee_recipient_owner = new_recipient_owner;
+    require_keys_neq!(treasury_program, Pubkey::default());
+    amm_config.treasury_program = treasury_program;
     Ok(())
 }
 
-fn set_new_fund_fee_recipient_owner(
-    amm_config: &mut Account<AmmConfig>,
-    new_recipient_owner: Pubkey,
-) -> Result<()> {
-    require_keys_neq!(new_recipient_owner, Pubkey::default());
-    amm_config.fund_fee_recipient_owner = new_recipient_owner;
+fn set_treasury_state(amm_config: &mut Account<AmmConfig>, treasury_state: Pubkey) -> Result<()> {
+    require_keys_neq!(treasury_state, Pubkey::default());
+    amm_config.treasury_state = treasury_state;
+    Ok(())
+}
+
+fn set_mim_mint(amm_config: &mut Account<AmmConfig>, mim_mint: Pubkey) -> Result<()> {
+    require_keys_neq!(mim_mint, Pubkey::default());
+    amm_config.mim_mint = mim_mint;
     Ok(())
 }

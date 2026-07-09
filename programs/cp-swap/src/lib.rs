@@ -20,24 +20,24 @@ solana_security_txt::security_txt! {
 }
 
 #[cfg(feature = "devnet")]
-declare_id!("DRaycpLY18LhpbydsBWbVJtxpNv9oXPgjRSfpF2bWpYb");
+declare_id!("HBcK8eBUSWW3YGgrWv1aUpsMF6GtgkjwkcoBiHMw8gxY");
 #[cfg(not(feature = "devnet"))]
-declare_id!("CPMMoo8L3F4NbTegBCKVNunggL7H1ZpdTHKxQB5qKP1C");
+declare_id!("HBcK8eBUSWW3YGgrWv1aUpsMF6GtgkjwkcoBiHMw8gxY");
 
 pub mod admin {
     use super::{pubkey, Pubkey};
     #[cfg(feature = "devnet")]
-    pub const ID: Pubkey = pubkey!("DRayqG9RXYi8WHgWEmRQGrUWRWbhjYWYkCRJDd6JBBak");
+    pub const ID: Pubkey = pubkey!("G5mgpU51BzRyG5u294aVnecaxhW121iig4Eg3wXPAVda");
     #[cfg(not(feature = "devnet"))]
-    pub const ID: Pubkey = pubkey!("GThUX1Atko4tqhN2NaiTazWSeFWMuiUvfFnyJyUghFMJ");
+    pub const ID: Pubkey = pubkey!("G5mgpU51BzRyG5u294aVnecaxhW121iig4Eg3wXPAVda");
 }
 
 pub mod create_pool_fee_reveiver {
     use super::{pubkey, Pubkey};
     #[cfg(feature = "devnet")]
-    pub const ID: Pubkey = pubkey!("3oE58BKVt8KuYkGxx8zBojugnymWmBiyafWgMrnb6eYy");
+    pub const ID: Pubkey = pubkey!("9xBAJLDnp9PyGUtr1RNzJbQhYt3CXSD6FvCxYFa9VZWG");
     #[cfg(not(feature = "devnet"))]
-    pub const ID: Pubkey = pubkey!("DNXgeM9EiiaAbaWvwjHj9fQQLAX5ZsfHyvmYUNRAdNC8");
+    pub const ID: Pubkey = pubkey!("9xBAJLDnp9PyGUtr1RNzJbQhYt3CXSD6FvCxYFa9VZWG");
 }
 
 pub const AUTH_SEED: &str = "vault_and_lp_mint_auth_seed";
@@ -63,6 +63,9 @@ pub mod raydium_cp_swap {
         fund_fee_rate: u64,
         create_pool_fee: u64,
         creator_fee_rate: u64,
+        treasury_program: Pubkey,
+        treasury_state: Pubkey,
+        mim_mint: Pubkey,
     ) -> Result<()> {
         assert!(trade_fee_rate + creator_fee_rate < FEE_RATE_DENOMINATOR_VALUE);
         assert!(protocol_fee_rate <= FEE_RATE_DENOMINATOR_VALUE);
@@ -76,6 +79,9 @@ pub mod raydium_cp_swap {
             fund_fee_rate,
             create_pool_fee,
             creator_fee_rate,
+            treasury_program,
+            treasury_state,
+            mim_mint,
         )
     }
 

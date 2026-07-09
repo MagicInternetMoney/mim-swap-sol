@@ -40,6 +40,9 @@ export async function setupInitializeTest(
     fundFeeRate: BN;
     create_fee: BN;
     creatorFeeRate?: BN;
+    treasuryProgram?: PublicKey;
+    treasuryState?: PublicKey;
+    mimMint?: PublicKey;
   },
   transferFeeConfig: { transferFeeBasisPoints: number; MaxFee: number } = {
     transferFeeBasisPoints: 0,
@@ -64,6 +67,9 @@ export async function setupInitializeTest(
     config.fundFeeRate,
     config.create_fee,
     config.creatorFeeRate ?? new BN(0),
+    config.treasuryProgram,
+    config.treasuryState,
+    config.mimMint,
     confirmOptions
   );
   return {
@@ -86,6 +92,9 @@ export async function setupDepositTest(
     fundFeeRate: BN;
     create_fee: BN;
     creatorFeeRate?: BN;
+    treasuryProgram?: PublicKey;
+    treasuryState?: PublicKey;
+    mimMint?: PublicKey;
   },
   transferFeeConfig: { transferFeeBasisPoints: number; MaxFee: number } = {
     transferFeeBasisPoints: 0,
@@ -111,6 +120,9 @@ export async function setupDepositTest(
     config.fundFeeRate,
     config.create_fee,
     config.creatorFeeRate ?? new BN(0),
+    config.treasuryProgram,
+    config.treasuryState,
+    config.mimMint,
     confirmOptions
   );
 
@@ -167,6 +179,9 @@ export async function setupSwapTest(
     fundFeeRate: BN;
     create_fee: BN;
     creatorFeeRate?: BN;
+    treasuryProgram?: PublicKey;
+    treasuryState?: PublicKey;
+    mimMint?: PublicKey;
   },
   transferFeeConfig: { transferFeeBasisPoints: number; MaxFee: number } = {
     transferFeeBasisPoints: 0,
@@ -184,6 +199,9 @@ export async function setupSwapTest(
     config.fundFeeRate,
     config.create_fee,
     config.creatorFeeRate ?? new BN(0),
+    config.treasuryProgram,
+    config.treasuryState,
+    config.mimMint,
     confirmOptions
   );
 
@@ -232,6 +250,9 @@ export async function createAmmConfig(
   fundFeeRate: BN,
   create_fee: BN,
   creatorFeeRate: BN = new BN(0),
+  treasuryProgram: PublicKey = Keypair.generate().publicKey,
+  treasuryState: PublicKey = Keypair.generate().publicKey,
+  mimMint: PublicKey = Keypair.generate().publicKey,
   confirmOptions?: ConfirmOptions
 ): Promise<PublicKey> {
   const [address, _] = await getAmmConfigAddress(
@@ -249,7 +270,10 @@ export async function createAmmConfig(
       protocolFeeRate,
       fundFeeRate,
       create_fee,
-      creatorFeeRate
+      creatorFeeRate,
+      treasuryProgram,
+      treasuryState,
+      mimMint
     )
     .accounts({
       owner: owner.publicKey,

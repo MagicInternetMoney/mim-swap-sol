@@ -10,7 +10,7 @@ use anchor_spl::{
     token_interface::{self, Burn, Mint, MintTo, TokenAccount, TokenInterface, TransferChecked},
 };
 
-declare_id!("FSsVgZiMQVZhPvKjP6L3cANP9nVK2AZu6AhYiqb3BhS1");
+declare_id!("57zApTfybZ5tGo5iCE8v9Jxe2vBGjfAdowaKUk7j6m5e");
 
 pub const TREASURY_SEED: &[u8] = b"treasury";
 pub const TREASURY_AUTHORITY_SEED: &[u8] = b"treasury_authority";

@@ -2,36 +2,40 @@
 anchor_version = "0.32.1"
 solana_version = "2.3.0"
 
-[workspace]
-members = ["programs/cp-swap", "programs/mana-treasury"]
-
 [features]
-seeds = false
+resolution = true
 skip-lint = false
 
-[programs.Localnet]
-raydium_cp_swap = "CPMMoo8L3F4NbTegBCKVNunggL7H1ZpdTHKxQB5qKP1C"
-mana_treasury = "FSsVgZiMQVZhPvKjP6L3cANP9nVK2AZu6AhYiqb3BhS1"
-
+[programs.localnet]
+mana_treasury = "57zApTfybZ5tGo5iCE8v9Jxe2vBGjfAdowaKUk7j6m5e"
+raydium_cp_swap = "HBcK8eBUSWW3YGgrWv1aUpsMF6GtgkjwkcoBiHMw8gxY"
 
 [registry]
 url = "https://github.com/raydium-io/raydium-cp-swap"
 
 [provider]
-cluster = "Localnet"
+cluster = "localnet"
 wallet = "~/.config/solana/id.json"
+
+[workspace]
+members = ["programs/cp-swap", "programs/mana-treasury"]
 
 [scripts]
 test = "yarn install && yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/*.test.ts"
 
 [test]
 startup_wait = 10000
+shutdown_wait = 2000
+upgradeable = false
 
 [test.validator]
+bind_address = "0.0.0.0"
 url = "https://api.mainnet-beta.solana.com"
+ledger = ".anchor/test-ledger"
+rpc_port = 8899
 
 [[test.validator.clone]]
-address = "DNXgeM9EiiaAbaWvwjHj9fQQLAX5ZsfHyvmYUNRAdNC8" # pool fee receiver
+address = "DNXgeM9EiiaAbaWvwjHj9fQQLAX5ZsfHyvmYUNRAdNC8"
 
 [[test.validator.clone]]
-address = "D4FPEruKEHrG5TenZ2mpDGEfu1iUvTiqBxvpU8HLBvC2" # index 0 AMM Config account
+address = "D4FPEruKEHrG5TenZ2mpDGEfu1iUvTiqBxvpU8HLBvC2"

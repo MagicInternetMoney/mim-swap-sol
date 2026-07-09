@@ -6,6 +6,7 @@ use colorful::Colorful;
 use raydium_cp_swap::instruction;
 use raydium_cp_swap::states::*;
 use regex::Regex;
+use solana_sdk::pubkey::Pubkey;
 use solana_transaction_status::{
     option_serializer::OptionSerializer, EncodedTransaction, UiTransactionStatusMeta,
 };
@@ -321,6 +322,9 @@ pub fn handle_program_instruction(
                 pub fund_fee_rate: u64,
                 pub create_pool_fee: u64,
                 pub creator_fee_rate: u64,
+                pub treasury_program: Pubkey,
+                pub treasury_state: Pubkey,
+                pub mim_mint: Pubkey,
             }
             impl From<instruction::CreateAmmConfig> for CreateAmmConfig {
                 fn from(instr: instruction::CreateAmmConfig) -> CreateAmmConfig {
@@ -331,6 +335,9 @@ pub fn handle_program_instruction(
                         fund_fee_rate: instr.fund_fee_rate,
                         create_pool_fee: instr.create_pool_fee,
                         creator_fee_rate: instr.creator_fee_rate,
+                        treasury_program: instr.treasury_program,
+                        treasury_state: instr.treasury_state,
+                        mim_mint: instr.mim_mint,
                     }
                 }
             }

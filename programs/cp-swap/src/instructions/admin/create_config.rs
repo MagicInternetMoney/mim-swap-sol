@@ -37,7 +37,26 @@ pub fn create_amm_config(
     fund_fee_rate: u64,
     create_pool_fee: u64,
     creator_fee_rate: u64,
+    treasury_program: Pubkey,
+    treasury_state: Pubkey,
+    mim_mint: Pubkey,
 ) -> Result<()> {
+    require_keys_neq!(
+        treasury_program,
+        Pubkey::default(),
+        ErrorCode::InvalidTreasuryFeeConfig
+    );
+    require_keys_neq!(
+        treasury_state,
+        Pubkey::default(),
+        ErrorCode::InvalidTreasuryFeeConfig
+    );
+    require_keys_neq!(
+        mim_mint,
+        Pubkey::default(),
+        ErrorCode::InvalidTreasuryFeeConfig
+    );
+
     let amm_config = ctx.accounts.amm_config.deref_mut();
     amm_config.protocol_owner = ctx.accounts.owner.key();
     amm_config.bump = ctx.bumps.amm_config;
@@ -49,7 +68,8 @@ pub fn create_amm_config(
     amm_config.create_pool_fee = create_pool_fee;
     amm_config.fund_owner = ctx.accounts.owner.key();
     amm_config.creator_fee_rate = creator_fee_rate;
-    amm_config.protocol_fee_recipient_owner = ctx.accounts.owner.key();
-    amm_config.fund_fee_recipient_owner = ctx.accounts.owner.key();
+    amm_config.treasury_program = treasury_program;
+    amm_config.treasury_state = treasury_state;
+    amm_config.mim_mint = mim_mint;
     Ok(())
 }
