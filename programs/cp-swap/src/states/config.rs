@@ -26,10 +26,14 @@ pub struct AmmConfig {
     pub fund_owner: Pubkey,
     /// The pool creator fee, denominated in hundredths of a bip (10^-6)
     pub creator_fee_rate: u64,
+    /// Token-account owner that must receive collected protocol fees
+    pub protocol_fee_recipient_owner: Pubkey,
+    /// Token-account owner that must receive collected fund fees
+    pub fund_fee_recipient_owner: Pubkey,
     /// padding
-    pub padding: [u64; 15],
+    pub padding: [u64; 7],
 }
 
 impl AmmConfig {
-    pub const LEN: usize = 8 + 1 + 1 + 2 + 4 * 8 + 32 * 2 + 8 + 8 * 15;
+    pub const LEN: usize = 8 + 1 + 1 + 2 + 4 * 8 + 32 * 4 + 8 + 8 * 7;
 }

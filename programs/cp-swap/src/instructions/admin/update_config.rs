@@ -32,6 +32,14 @@ pub fn update_amm_config(ctx: Context<UpdateAmmConfig>, param: u8, value: u64) -
         Some(5) => amm_config.create_pool_fee = value,
         Some(6) => amm_config.disable_create_pool = if value == 0 { false } else { true },
         Some(7) => update_creator_fee_rate(amm_config, value),
+        Some(8) => {
+            let new_recipient_owner = *ctx.remaining_accounts.iter().next().unwrap().key;
+            set_new_protocol_fee_recipient_owner(amm_config, new_recipient_owner)?;
+        }
+        Some(9) => {
+            let new_recipient_owner = *ctx.remaining_accounts.iter().next().unwrap().key;
+            set_new_fund_fee_recipient_owner(amm_config, new_recipient_owner)?;
+        }
         _ => return err!(ErrorCode::InvalidInput),
     }
 
@@ -81,5 +89,23 @@ fn set_new_fund_owner(amm_config: &mut Account<AmmConfig>, new_fund_owner: Pubke
         new_fund_owner.key().to_string()
     );
     amm_config.fund_owner = new_fund_owner;
+    Ok(())
+}
+
+fn set_new_protocol_fee_recipient_owner(
+    amm_config: &mut Account<AmmConfig>,
+    new_recipient_owner: Pubkey,
+) -> Result<()> {
+    require_keys_neq!(new_recipient_owner, Pubkey::default());
+    amm_config.protocol_fee_recipient_owner = new_recipient_owner;
+    Ok(())
+}
+
+fn set_new_fund_fee_recipient_owner(
+    amm_config: &mut Account<AmmConfig>,
+    new_recipient_owner: Pubkey,
+) -> Result<()> {
+    require_keys_neq!(new_recipient_owner, Pubkey::default());
+    amm_config.fund_fee_recipient_owner = new_recipient_owner;
     Ok(())
 }

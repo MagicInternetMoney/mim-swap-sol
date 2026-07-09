@@ -3,7 +3,7 @@ anchor_version = "0.32.1"
 solana_version = "2.3.0"
 
 [workspace]
-members = ["programs/cp-swap"]
+members = ["programs/cp-swap", "programs/mana-treasury"]
 
 [features]
 seeds = false
@@ -11,6 +11,7 @@ skip-lint = false
 
 [programs.Localnet]
 raydium_cp_swap = "CPMMoo8L3F4NbTegBCKVNunggL7H1ZpdTHKxQB5qKP1C"
+mana_treasury = "FSsVgZiMQVZhPvKjP6L3cANP9nVK2AZu6AhYiqb3BhS1"
 
 
 [registry]

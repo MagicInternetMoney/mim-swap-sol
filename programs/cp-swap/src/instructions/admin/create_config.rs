@@ -49,5 +49,7 @@ pub fn create_amm_config(
     amm_config.create_pool_fee = create_pool_fee;
     amm_config.fund_owner = ctx.accounts.owner.key();
     amm_config.creator_fee_rate = creator_fee_rate;
+    amm_config.protocol_fee_recipient_owner = ctx.accounts.owner.key();
+    amm_config.fund_fee_recipient_owner = ctx.accounts.owner.key();
     Ok(())
 }

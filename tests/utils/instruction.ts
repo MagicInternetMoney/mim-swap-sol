@@ -39,6 +39,7 @@ export async function setupInitializeTest(
     protocolFeeRate: BN;
     fundFeeRate: BN;
     create_fee: BN;
+    creatorFeeRate?: BN;
   },
   transferFeeConfig: { transferFeeBasisPoints: number; MaxFee: number } = {
     transferFeeBasisPoints: 0,
@@ -62,6 +63,7 @@ export async function setupInitializeTest(
     config.protocolFeeRate,
     config.fundFeeRate,
     config.create_fee,
+    config.creatorFeeRate ?? new BN(0),
     confirmOptions
   );
   return {
@@ -83,6 +85,7 @@ export async function setupDepositTest(
     protocolFeeRate: BN;
     fundFeeRate: BN;
     create_fee: BN;
+    creatorFeeRate?: BN;
   },
   transferFeeConfig: { transferFeeBasisPoints: number; MaxFee: number } = {
     transferFeeBasisPoints: 0,
@@ -107,6 +110,7 @@ export async function setupDepositTest(
     config.protocolFeeRate,
     config.fundFeeRate,
     config.create_fee,
+    config.creatorFeeRate ?? new BN(0),
     confirmOptions
   );
 
@@ -162,6 +166,7 @@ export async function setupSwapTest(
     protocolFeeRate: BN;
     fundFeeRate: BN;
     create_fee: BN;
+    creatorFeeRate?: BN;
   },
   transferFeeConfig: { transferFeeBasisPoints: number; MaxFee: number } = {
     transferFeeBasisPoints: 0,
@@ -178,6 +183,7 @@ export async function setupSwapTest(
     config.protocolFeeRate,
     config.fundFeeRate,
     config.create_fee,
+    config.creatorFeeRate ?? new BN(0),
     confirmOptions
   );
 
@@ -225,6 +231,7 @@ export async function createAmmConfig(
   protocolFeeRate: BN,
   fundFeeRate: BN,
   create_fee: BN,
+  creatorFeeRate: BN = new BN(0),
   confirmOptions?: ConfirmOptions
 ): Promise<PublicKey> {
   const [address, _] = await getAmmConfigAddress(
@@ -241,7 +248,8 @@ export async function createAmmConfig(
       tradeFeeRate,
       protocolFeeRate,
       fundFeeRate,
-      create_fee
+      create_fee,
+      creatorFeeRate
     )
     .accounts({
       owner: owner.publicKey,

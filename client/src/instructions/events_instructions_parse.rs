@@ -320,6 +320,7 @@ pub fn handle_program_instruction(
                 pub protocol_fee_rate: u64,
                 pub fund_fee_rate: u64,
                 pub create_pool_fee: u64,
+                pub creator_fee_rate: u64,
             }
             impl From<instruction::CreateAmmConfig> for CreateAmmConfig {
                 fn from(instr: instruction::CreateAmmConfig) -> CreateAmmConfig {
@@ -329,6 +330,7 @@ pub fn handle_program_instruction(
                         protocol_fee_rate: instr.protocol_fee_rate,
                         fund_fee_rate: instr.fund_fee_rate,
                         create_pool_fee: instr.create_pool_fee,
+                        creator_fee_rate: instr.creator_fee_rate,
                     }
                 }
             }
