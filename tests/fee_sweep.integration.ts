@@ -40,9 +40,9 @@ const PENDING_MANA_VAULT_SEED = Buffer.from("pending_mana_vault");
 const ASSET_VAULT_SEED = Buffer.from("asset_vault");
 const ASSET_TOKEN_VAULT_SEED = Buffer.from("asset_token_vault");
 
-function deriveTreasuryPdas(programId: PublicKey) {
+function deriveTreasuryPdas(programId: PublicKey, authority: PublicKey) {
   const [treasuryState] = PublicKey.findProgramAddressSync(
-    [TREASURY_SEED],
+    [TREASURY_SEED, authority.toBuffer()],
     programId
   );
   const [treasuryAuthority] = PublicKey.findProgramAddressSync(
@@ -233,7 +233,10 @@ describe("permissionless treasury fee sweeps", () => {
       100_000_000n
     );
 
-    const treasuryPdas = deriveTreasuryPdas(manaProgram.programId);
+    const treasuryPdas = deriveTreasuryPdas(
+      manaProgram.programId,
+      authority.publicKey
+    );
     await manaProgram.methods
       .initializeTreasury()
       .accounts({

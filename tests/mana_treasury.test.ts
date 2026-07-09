@@ -29,9 +29,9 @@ const REDEMPTION_SEED = Buffer.from("redemption");
 const ASSET_VAULT_SEED = Buffer.from("asset_vault");
 const ASSET_TOKEN_VAULT_SEED = Buffer.from("asset_token_vault");
 
-function deriveTreasuryPdas(programId: PublicKey) {
+function deriveTreasuryPdas(programId: PublicKey, authority: PublicKey) {
   const [treasuryState] = PublicKey.findProgramAddressSync(
-    [TREASURY_SEED],
+    [TREASURY_SEED, authority.toBuffer()],
     programId
   );
   const [treasuryAuthority] = PublicKey.findProgramAddressSync(
@@ -166,7 +166,14 @@ describe("mana treasury", () => {
       1_000n
     );
 
-    const pdas = deriveTreasuryPdas(program.programId);
+    const pdas = deriveTreasuryPdas(program.programId, authority.publicKey);
+    const bobPdas = deriveTreasuryPdas(program.programId, bob.publicKey);
+    assert.notEqual(
+      pdas.treasuryState.toString(),
+      bobPdas.treasuryState.toString(),
+      "treasury PDA should be namespaced by initial authority"
+    );
+
     await program.methods
       .initializeTreasury()
       .accounts({

@@ -25,7 +25,7 @@ yarn test:mana-local
 
 This is the main local sanity check for the MIM-backed Mana treasury. It:
 
-- Builds `mana_treasury` with `--features local-testing`.
+- Builds `mana_treasury` with `--features local-testing` for the disposable local harness.
 - Starts a clean local `solana-test-validator`.
 - Loads `target/deploy/mana_treasury.so` at the configured local program id.
 - Creates a temporary funded local wallet.
@@ -68,13 +68,24 @@ The script starts the validator with `--reset`, so the ledger is recreated each 
 
 ## Why `local-testing` Exists
 
-Production/default builds enforce the real MIM mint:
+Deployable builds no longer hardcode the reserve mint. `initialize_treasury`
+accepts the chosen SPL mint and stores it as the treasury reserve mint, so:
+
+- Devnet can create and pass any disposable SPL test-MIM mint.
+- Mainnet should pass the real MIM mint: `89BZ5RU212yKr3iFdJHyn3ZsR37bS4s8TbmVb2yApump`.
+
+The treasury state PDA is also seeded by the initial authority:
 
 ```text
-89BZ5RU212yKr3iFdJHyn3ZsR37bS4s8TbmVb2yApump
+[b"treasury", authority]
 ```
 
-Local tests need a disposable mint so they can mint fake MIM on a private validator. The `local-testing` feature disables only that hardcoded mint check. Do not deploy a `local-testing` build.
+That means your deploy/admin wallet owns its treasury namespace, and another wallet
+cannot initialize the same canonical treasury address before you. Changing treasury
+authority later does not change the PDA address.
+
+Local tests still use the `local-testing` feature for the disposable local test
+harness. Do not deploy a `local-testing` build.
 
 For deployable builds, use the default feature set:
 
@@ -123,4 +134,3 @@ yarn test:mana-local
 ```
 
 It starts a minimal local validator with only the Mana program loaded, so the test does not depend on mainnet clones.
-

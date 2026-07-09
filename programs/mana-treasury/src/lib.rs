@@ -22,20 +22,12 @@ pub const REDEMPTION_SEED: &[u8] = b"redemption";
 pub const ASSET_VAULT_SEED: &[u8] = b"asset_vault";
 pub const ASSET_TOKEN_VAULT_SEED: &[u8] = b"asset_token_vault";
 pub const DEFAULT_COOLDOWN_SECONDS: u64 = 259_200;
-pub const MIM_MINT: Pubkey = pubkey!("89BZ5RU212yKr3iFdJHyn3ZsR37bS4s8TbmVb2yApump");
 
 #[program]
 pub mod mana_treasury {
     use super::*;
 
     pub fn initialize_treasury(ctx: Context<InitializeTreasury>) -> Result<()> {
-        #[cfg(not(feature = "local-testing"))]
-        require_keys_eq!(
-            ctx.accounts.mim_mint.key(),
-            MIM_MINT,
-            TreasuryError::InvalidMimMint
-        );
-
         let state = &mut ctx.accounts.treasury_state;
         state.authority = ctx.accounts.authority.key();
         state.pending_authority = Pubkey::default();
@@ -359,7 +351,7 @@ pub struct InitializeTreasury<'info> {
     #[account(
         init,
         payer = authority,
-        seeds = [TREASURY_SEED],
+        seeds = [TREASURY_SEED, authority.key().as_ref()],
         bump,
         space = 8 + TreasuryState::LEN,
     )]
@@ -738,8 +730,6 @@ impl RedemptionRequest {
 pub enum TreasuryError {
     #[msg("Invalid amount")]
     InvalidAmount,
-    #[msg("Invalid MIM mint")]
-    InvalidMimMint,
     #[msg("Math overflow")]
     MathOverflow,
     #[msg("Exceeded slippage limit")]
