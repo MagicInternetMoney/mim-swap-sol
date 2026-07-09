@@ -6,6 +6,7 @@ import {
   Keypair,
   LAMPORTS_PER_SOL,
   PublicKey,
+  SYSVAR_RENT_PUBKEY,
   SystemProgram,
 } from "@solana/web3.js";
 import {
@@ -28,6 +29,10 @@ const PENDING_MANA_VAULT_SEED = Buffer.from("pending_mana_vault");
 const REDEMPTION_SEED = Buffer.from("redemption");
 const ASSET_VAULT_SEED = Buffer.from("asset_vault");
 const ASSET_TOKEN_VAULT_SEED = Buffer.from("asset_token_vault");
+const METADATA_SEED = Buffer.from("metadata");
+const TOKEN_METADATA_PROGRAM_ID = new PublicKey(
+  "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
+);
 
 function deriveTreasuryPdas(programId: PublicKey, authority: PublicKey) {
   const [treasuryState] = PublicKey.findProgramAddressSync(
@@ -89,6 +94,33 @@ function deriveAssetVaults(
     programId
   );
   return { assetVault, assetTokenAccount };
+}
+
+function deriveMetadataPda(mint: PublicKey) {
+  return PublicKey.findProgramAddressSync(
+    [METADATA_SEED, TOKEN_METADATA_PROGRAM_ID.toBuffer(), mint.toBuffer()],
+    TOKEN_METADATA_PROGRAM_ID
+  )[0];
+}
+
+function readMetadataText(data: Buffer) {
+  let offset = 1 + 32 + 32;
+  const readString = () => {
+    const length = data.readUInt32LE(offset);
+    offset += 4;
+    const value = data
+      .subarray(offset, offset + length)
+      .toString("utf8")
+      .replace(/\0+$/, "");
+    offset += length;
+    return value;
+  };
+
+  return {
+    name: readString(),
+    symbol: readString(),
+    uri: readString(),
+  };
 }
 
 describe("mana treasury", () => {
@@ -191,6 +223,51 @@ describe("mana treasury", () => {
       })
       .signers([authority])
       .rpc(confirmOptions);
+
+    const manaMetadata = deriveMetadataPda(pdas.manaMint);
+    try {
+      await program.methods
+        .initializeManaMetadata("Fake Mana", "FAKE", "")
+        .accounts({
+          authority: bob.publicKey,
+          treasuryState: pdas.treasuryState,
+          treasuryAuthority: pdas.treasuryAuthority,
+          manaMint: pdas.manaMint,
+          metadata: manaMetadata,
+          metadataProgram: TOKEN_METADATA_PROGRAM_ID,
+          systemProgram: SystemProgram.programId,
+          rent: SYSVAR_RENT_PUBKEY,
+        })
+        .signers([bob])
+        .rpc(confirmOptions);
+      assert.fail("unauthorized Mana metadata initialization should fail");
+    } catch (_err) {
+      assert.ok(true);
+    }
+
+    await program.methods
+      .initializeManaMetadata("Mana", "MANA", "")
+      .accounts({
+        authority: authority.publicKey,
+        treasuryState: pdas.treasuryState,
+        treasuryAuthority: pdas.treasuryAuthority,
+        manaMint: pdas.manaMint,
+        metadata: manaMetadata,
+        metadataProgram: TOKEN_METADATA_PROGRAM_ID,
+        systemProgram: SystemProgram.programId,
+        rent: SYSVAR_RENT_PUBKEY,
+      })
+      .signers([authority])
+      .rpc(confirmOptions);
+
+    const metadataAccount = await connection.getAccountInfo(manaMetadata);
+    if (!metadataAccount) {
+      assert.fail("Mana metadata account should exist");
+    }
+    const metadataText = readMetadataText(metadataAccount.data);
+    assert.equal(metadataText.name, "Mana");
+    assert.equal(metadataText.symbol, "MANA");
+    assert.equal(metadataText.uri, "");
 
     await program.methods
       .setCooldownSeconds(new BN(0))

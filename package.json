@@ -1,6 +1,7 @@
 {
     "scripts": {
         "keys:setup": "bash scripts/setup-owned-keys.sh",
+        "devnet:setup-treasury": "node scripts/setup-devnet-treasury.js",
         "test:mana-local": "bash scripts/test-mana-local.sh",
         "test:fee-sweep-local": "bash scripts/test-fee-sweep-local.sh",
         "lint:fix": "prettier */*.js \"*/**/*{.js,.ts}\" -w",

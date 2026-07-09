@@ -7,6 +7,10 @@ use anchor_lang::{
 };
 use anchor_spl::{
     associated_token::AssociatedToken,
+    metadata::{
+        create_metadata_accounts_v3, mpl_token_metadata::types::DataV2, CreateMetadataAccountsV3,
+        Metadata,
+    },
     token_interface::{self, Burn, Mint, MintTo, TokenAccount, TokenInterface, TransferChecked},
 };
 
@@ -138,6 +142,69 @@ pub mod mana_treasury {
         require_authority(&ctx.accounts.treasury_state, &ctx.accounts.authority)?;
         ctx.accounts.treasury_state.cooldown_seconds = cooldown_seconds;
         Ok(())
+    }
+
+    pub fn initialize_mana_metadata(
+        ctx: Context<InitializeManaMetadata>,
+        name: String,
+        symbol: String,
+        uri: String,
+    ) -> Result<()> {
+        require_authority(&ctx.accounts.treasury_state, &ctx.accounts.authority)?;
+
+        let metadata_program = ctx.accounts.metadata_program.key();
+        let mana_mint_key = ctx.accounts.mana_mint.key();
+        let (expected_metadata, _) = Pubkey::find_program_address(
+            &[
+                b"metadata",
+                metadata_program.as_ref(),
+                mana_mint_key.as_ref(),
+            ],
+            &metadata_program,
+        );
+        require_keys_eq!(
+            ctx.accounts.metadata.key(),
+            expected_metadata,
+            TreasuryError::InvalidMetadataAccount
+        );
+
+        let treasury_key = ctx.accounts.treasury_state.key();
+        let authority_bump = [ctx.accounts.treasury_state.authority_bump];
+        let authority_seeds = [
+            TREASURY_AUTHORITY_SEED,
+            treasury_key.as_ref(),
+            authority_bump.as_ref(),
+        ];
+
+        let data = DataV2 {
+            name,
+            symbol,
+            uri,
+            seller_fee_basis_points: 0,
+            creators: None,
+            collection: None,
+            uses: None,
+        };
+
+        create_metadata_accounts_v3(
+            CpiContext::new_with_signer(
+                ctx.accounts.metadata_program.to_account_info(),
+                CreateMetadataAccountsV3 {
+                    metadata: ctx.accounts.metadata.to_account_info(),
+                    mint: ctx.accounts.mana_mint.to_account_info(),
+                    mint_authority: ctx.accounts.treasury_authority.to_account_info(),
+                    payer: ctx.accounts.authority.to_account_info(),
+                    update_authority: ctx.accounts.authority.to_account_info(),
+                    system_program: ctx.accounts.system_program.to_account_info(),
+                    rent: ctx.accounts.rent.to_account_info(),
+                },
+                &[&authority_seeds],
+            ),
+            data,
+            true,
+            true,
+            None,
+        )
     }
 
     pub fn swap_asset_to_mim(
@@ -547,6 +614,27 @@ pub struct SetCooldownSeconds<'info> {
 }
 
 #[derive(Accounts)]
+pub struct InitializeManaMetadata<'info> {
+    #[account(mut)]
+    pub authority: Signer<'info>,
+    pub treasury_state: Account<'info, TreasuryState>,
+    /// CHECK: PDA signer and Mana mint authority.
+    #[account(
+        seeds = [TREASURY_AUTHORITY_SEED, treasury_state.key().as_ref()],
+        bump = treasury_state.authority_bump,
+    )]
+    pub treasury_authority: UncheckedAccount<'info>,
+    #[account(address = treasury_state.mana_mint)]
+    pub mana_mint: InterfaceAccount<'info, Mint>,
+    /// CHECK: Validated against the Metaplex metadata PDA for mana_mint.
+    #[account(mut)]
+    pub metadata: UncheckedAccount<'info>,
+    pub metadata_program: Program<'info, Metadata>,
+    pub system_program: Program<'info, System>,
+    pub rent: Sysvar<'info, Rent>,
+}
+
+#[derive(Accounts)]
 pub struct SwapAssetToMim<'info> {
     pub authority: Signer<'info>,
     pub treasury_state: Account<'info, TreasuryState>,
@@ -746,6 +834,8 @@ pub enum TreasuryError {
     InvalidAssetMint,
     #[msg("Invalid asset vault")]
     InvalidAssetVault,
+    #[msg("Invalid metadata account")]
+    InvalidMetadataAccount,
     #[msg("Swap router is not set")]
     SwapRouterNotSet,
     #[msg("Invalid swap router")]

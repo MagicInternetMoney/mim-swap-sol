@@ -26,8 +26,11 @@ yarn test:mana-local
 This is the main local sanity check for the MIM-backed Mana treasury. It:
 
 - Builds `mana_treasury` with `--features local-testing` for the disposable local harness.
+- Downloads the deployed Metaplex Token Metadata program to
+  `target/deploy/metaplex_token_metadata.so` on first run if it is missing.
 - Starts a clean local `solana-test-validator`.
 - Loads `target/deploy/mana_treasury.so` at the configured local program id.
+- Loads the Metaplex Token Metadata program so wallet-visible Mana metadata can be tested.
 - Creates a temporary funded local wallet.
 - Runs only `tests/mana_treasury.test.ts`.
 - Stops the validator and deletes the temporary wallet when finished.
@@ -35,6 +38,8 @@ This is the main local sanity check for the MIM-backed Mana treasury. It:
 The test covers:
 
 - First MIM deposit minting Mana 1:1.
+- Admin-only Mana metadata initialization creating a Metaplex metadata PDA with
+  `name = "Mana"` and `symbol = "MANA"`.
 - MIM donation minting no Mana and raising NAV.
 - Later MIM deposit minting less Mana after NAV increases.
 - Mana transfer between wallets.
@@ -43,6 +48,13 @@ The test covers:
 - Finalize de-stake burning escrowed Mana and paying reserved MIM.
 - Non-MIM asset vault donation staying outside Mana NAV.
 - Unauthorized treasury config update failing.
+
+If the first run cannot reach public RPC to dump the Metaplex program, provide a
+local dump explicitly:
+
+```bash
+TOKEN_METADATA_PROGRAM_SO=/absolute/path/to/metaplex_token_metadata.so yarn test:mana-local
+```
 
 ### Port Conflicts
 
@@ -122,6 +134,34 @@ anchor build
 ```
 
 This builds both Anchor programs and regenerates IDL/types in `target/`.
+
+## Devnet Treasury Setup
+
+After deploying `mana_treasury` to devnet, initialize the test treasury with:
+
+```bash
+npm run devnet:setup-treasury
+```
+
+By default this uses `target/deploy/mim_admin-keypair.json`, creates a standard
+SPL DMIM mint with 6 decimals, mints `1,000,000,000` DMIM to the admin ATA,
+creates Metaplex metadata for DMIM, initializes the treasury with DMIM as the
+reserve mint, creates Metaplex metadata for Mana, and sets the devnet cooldown
+to `30` seconds.
+
+Useful overrides:
+
+```bash
+RPC_URL=https://api.devnet.solana.com \
+ADMIN_KEYPAIR=target/deploy/mim_admin-keypair.json \
+DMIM_METADATA_URI="" \
+MANA_METADATA_URI="" \
+DEVNET_COOLDOWN_SECONDS=30 \
+npm run devnet:setup-treasury
+```
+
+The script writes the resulting addresses to
+`target/deploy/devnet-treasury.json`.
 
 ## Full Anchor Test Caveat
 
