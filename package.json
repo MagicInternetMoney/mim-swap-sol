@@ -2,6 +2,11 @@
     "scripts": {
         "keys:setup": "bash scripts/setup-owned-keys.sh",
         "devnet:setup-treasury": "node scripts/setup-devnet-treasury.js",
+        "treasury:dev": "npm --prefix apps/treasury run dev",
+        "treasury:build": "npm --prefix apps/treasury run build",
+        "treasury:check": "npm --prefix apps/treasury run check",
+        "treasury:test": "npm --prefix apps/treasury run test",
+        "treasury:sync-idl": "npm --prefix apps/treasury run sync:idl",
         "test:mana-local": "bash scripts/test-mana-local.sh",
         "test:fee-sweep-local": "bash scripts/test-fee-sweep-local.sh",
         "lint:fix": "prettier */*.js \"*/**/*{.js,.ts}\" -w",

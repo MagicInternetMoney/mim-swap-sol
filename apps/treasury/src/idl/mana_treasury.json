@@ -1,0 +1,1450 @@
+{
+  "address": "57zApTfybZ5tGo5iCE8v9Jxe2vBGjfAdowaKUk7j6m5e",
+  "metadata": {
+    "name": "mana_treasury",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "MIM-backed Mana treasury share vault"
+  },
+  "instructions": [
+    {
+      "name": "accept_treasury_authority",
+      "discriminator": [
+        219,
+        6,
+        23,
+        82,
+        89,
+        189,
+        96,
+        67
+      ],
+      "accounts": [
+        {
+          "name": "new_authority",
+          "signer": true
+        },
+        {
+          "name": "treasury_state",
+          "writable": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "create_asset_vault",
+      "discriminator": [
+        94,
+        30,
+        247,
+        39,
+        125,
+        131,
+        74,
+        41
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "treasury_state"
+        },
+        {
+          "name": "treasury_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  114,
+                  101,
+                  97,
+                  115,
+                  117,
+                  114,
+                  121,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "treasury_state"
+              }
+            ]
+          }
+        },
+        {
+          "name": "asset_mint"
+        },
+        {
+          "name": "asset_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  115,
+                  115,
+                  101,
+                  116,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "treasury_state"
+              },
+              {
+                "kind": "account",
+                "path": "asset_mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "asset_token_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  115,
+                  115,
+                  101,
+                  116,
+                  95,
+                  116,
+                  111,
+                  107,
+                  101,
+                  110,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "treasury_state"
+              },
+              {
+                "kind": "account",
+                "path": "asset_mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "asset_token_program"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "deposit_mim",
+      "discriminator": [
+        7,
+        122,
+        229,
+        210,
+        108,
+        33,
+        27,
+        227
+      ],
+      "accounts": [
+        {
+          "name": "depositor",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "treasury_state",
+          "writable": true
+        },
+        {
+          "name": "treasury_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  114,
+                  101,
+                  97,
+                  115,
+                  117,
+                  114,
+                  121,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "treasury_state"
+              }
+            ]
+          }
+        },
+        {
+          "name": "mim_mint"
+        },
+        {
+          "name": "mana_mint",
+          "writable": true
+        },
+        {
+          "name": "depositor_mim",
+          "writable": true
+        },
+        {
+          "name": "depositor_mana",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "depositor"
+              },
+              {
+                "kind": "account",
+                "path": "mana_token_program"
+              },
+              {
+                "kind": "account",
+                "path": "mana_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "active_mim_vault",
+          "writable": true
+        },
+        {
+          "name": "mim_token_program"
+        },
+        {
+          "name": "mana_token_program"
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        },
+        {
+          "name": "min_mana_out",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "donate_asset",
+      "discriminator": [
+        84,
+        167,
+        87,
+        235,
+        27,
+        195,
+        239,
+        31
+      ],
+      "accounts": [
+        {
+          "name": "donor",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "treasury_state"
+        },
+        {
+          "name": "asset_mint"
+        },
+        {
+          "name": "asset_vault"
+        },
+        {
+          "name": "donor_asset",
+          "writable": true
+        },
+        {
+          "name": "asset_token_account",
+          "writable": true
+        },
+        {
+          "name": "asset_token_program"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "donate_mim",
+      "discriminator": [
+        138,
+        138,
+        188,
+        3,
+        152,
+        26,
+        66,
+        55
+      ],
+      "accounts": [
+        {
+          "name": "donor",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "treasury_state"
+        },
+        {
+          "name": "mim_mint"
+        },
+        {
+          "name": "donor_mim",
+          "writable": true
+        },
+        {
+          "name": "active_mim_vault",
+          "writable": true
+        },
+        {
+          "name": "mim_token_program"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "finalize_destake",
+      "discriminator": [
+        76,
+        35,
+        226,
+        223,
+        215,
+        19,
+        42,
+        52
+      ],
+      "accounts": [
+        {
+          "name": "owner",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "treasury_state",
+          "writable": true
+        },
+        {
+          "name": "treasury_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  114,
+                  101,
+                  97,
+                  115,
+                  117,
+                  114,
+                  121,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "treasury_state"
+              }
+            ]
+          }
+        },
+        {
+          "name": "mim_mint"
+        },
+        {
+          "name": "mana_mint",
+          "writable": true
+        },
+        {
+          "name": "pending_mim_vault",
+          "writable": true
+        },
+        {
+          "name": "pending_mana_vault",
+          "writable": true
+        },
+        {
+          "name": "owner_mim",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "owner"
+              },
+              {
+                "kind": "account",
+                "path": "mim_token_program"
+              },
+              {
+                "kind": "account",
+                "path": "mim_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "redemption_request",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  100,
+                  101,
+                  109,
+                  112,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "treasury_state"
+              },
+              {
+                "kind": "account",
+                "path": "owner"
+              }
+            ]
+          }
+        },
+        {
+          "name": "mim_token_program"
+        },
+        {
+          "name": "mana_token_program"
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "initialize_mana_metadata",
+      "discriminator": [
+        132,
+        105,
+        182,
+        165,
+        74,
+        162,
+        47,
+        224
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "treasury_state"
+        },
+        {
+          "name": "treasury_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  114,
+                  101,
+                  97,
+                  115,
+                  117,
+                  114,
+                  121,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "treasury_state"
+              }
+            ]
+          }
+        },
+        {
+          "name": "mana_mint"
+        },
+        {
+          "name": "metadata",
+          "writable": true
+        },
+        {
+          "name": "metadata_program",
+          "address": "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "rent",
+          "address": "SysvarRent111111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "symbol",
+          "type": "string"
+        },
+        {
+          "name": "uri",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "initialize_treasury",
+      "discriminator": [
+        124,
+        186,
+        211,
+        195,
+        85,
+        165,
+        129,
+        166
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "treasury_state",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  114,
+                  101,
+                  97,
+                  115,
+                  117,
+                  114,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "authority"
+              }
+            ]
+          }
+        },
+        {
+          "name": "treasury_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  114,
+                  101,
+                  97,
+                  115,
+                  117,
+                  114,
+                  121,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "treasury_state"
+              }
+            ]
+          }
+        },
+        {
+          "name": "mim_mint"
+        },
+        {
+          "name": "mana_mint",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  97,
+                  110,
+                  97,
+                  95,
+                  109,
+                  105,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "treasury_state"
+              }
+            ]
+          }
+        },
+        {
+          "name": "active_mim_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  99,
+                  116,
+                  105,
+                  118,
+                  101,
+                  95,
+                  109,
+                  105,
+                  109,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "treasury_state"
+              }
+            ]
+          }
+        },
+        {
+          "name": "pending_mim_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  101,
+                  110,
+                  100,
+                  105,
+                  110,
+                  103,
+                  95,
+                  109,
+                  105,
+                  109,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "treasury_state"
+              }
+            ]
+          }
+        },
+        {
+          "name": "pending_mana_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  101,
+                  110,
+                  100,
+                  105,
+                  110,
+                  103,
+                  95,
+                  109,
+                  97,
+                  110,
+                  97,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "treasury_state"
+              }
+            ]
+          }
+        },
+        {
+          "name": "mim_token_program"
+        },
+        {
+          "name": "mana_token_program"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "set_cooldown_seconds",
+      "discriminator": [
+        50,
+        10,
+        223,
+        88,
+        99,
+        38,
+        232,
+        11
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "signer": true
+        },
+        {
+          "name": "treasury_state",
+          "writable": true
+        }
+      ],
+      "args": [
+        {
+          "name": "cooldown_seconds",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "set_swap_router",
+      "discriminator": [
+        72,
+        233,
+        50,
+        179,
+        61,
+        66,
+        35,
+        90
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "signer": true
+        },
+        {
+          "name": "treasury_state",
+          "writable": true
+        }
+      ],
+      "args": [
+        {
+          "name": "router",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "set_treasury_authority",
+      "discriminator": [
+        131,
+        244,
+        37,
+        32,
+        108,
+        28,
+        31,
+        8
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "signer": true
+        },
+        {
+          "name": "treasury_state",
+          "writable": true
+        }
+      ],
+      "args": [
+        {
+          "name": "pending_authority",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "start_destake",
+      "discriminator": [
+        176,
+        156,
+        48,
+        231,
+        76,
+        114,
+        103,
+        125
+      ],
+      "accounts": [
+        {
+          "name": "owner",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "treasury_state",
+          "writable": true
+        },
+        {
+          "name": "treasury_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  114,
+                  101,
+                  97,
+                  115,
+                  117,
+                  114,
+                  121,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "treasury_state"
+              }
+            ]
+          }
+        },
+        {
+          "name": "mim_mint"
+        },
+        {
+          "name": "mana_mint",
+          "writable": true
+        },
+        {
+          "name": "owner_mana",
+          "writable": true
+        },
+        {
+          "name": "pending_mana_vault",
+          "writable": true
+        },
+        {
+          "name": "active_mim_vault",
+          "writable": true
+        },
+        {
+          "name": "pending_mim_vault",
+          "writable": true
+        },
+        {
+          "name": "redemption_request",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  100,
+                  101,
+                  109,
+                  112,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "treasury_state"
+              },
+              {
+                "kind": "account",
+                "path": "owner"
+              }
+            ]
+          }
+        },
+        {
+          "name": "mim_token_program"
+        },
+        {
+          "name": "mana_token_program"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "mana_amount",
+          "type": "u64"
+        },
+        {
+          "name": "min_mim_out",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "swap_asset_to_mim",
+      "discriminator": [
+        56,
+        150,
+        143,
+        120,
+        84,
+        6,
+        21,
+        50
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "signer": true
+        },
+        {
+          "name": "treasury_state"
+        },
+        {
+          "name": "treasury_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  114,
+                  101,
+                  97,
+                  115,
+                  117,
+                  114,
+                  121,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "treasury_state"
+              }
+            ]
+          }
+        },
+        {
+          "name": "asset_mint"
+        },
+        {
+          "name": "asset_vault"
+        },
+        {
+          "name": "asset_token_account",
+          "writable": true
+        },
+        {
+          "name": "active_mim_vault",
+          "writable": true
+        },
+        {
+          "name": "router_program"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        },
+        {
+          "name": "min_mim_out",
+          "type": "u64"
+        },
+        {
+          "name": "router_ix_data",
+          "type": "bytes"
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "AssetVault",
+      "discriminator": [
+        193,
+        119,
+        127,
+        25,
+        157,
+        102,
+        175,
+        164
+      ]
+    },
+    {
+      "name": "RedemptionRequest",
+      "discriminator": [
+        117,
+        157,
+        214,
+        214,
+        64,
+        160,
+        31,
+        58
+      ]
+    },
+    {
+      "name": "TreasuryState",
+      "discriminator": [
+        240,
+        56,
+        226,
+        158,
+        138,
+        244,
+        79,
+        154
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "InvalidAmount",
+      "msg": "Invalid amount"
+    },
+    {
+      "code": 6001,
+      "name": "MathOverflow",
+      "msg": "Math overflow"
+    },
+    {
+      "code": 6002,
+      "name": "ExceededSlippage",
+      "msg": "Exceeded slippage limit"
+    },
+    {
+      "code": 6003,
+      "name": "ZeroManaOut",
+      "msg": "Mana output is zero"
+    },
+    {
+      "code": 6004,
+      "name": "ZeroMimOut",
+      "msg": "MIM output is zero"
+    },
+    {
+      "code": 6005,
+      "name": "InvalidTreasuryBalance",
+      "msg": "Invalid treasury balance"
+    },
+    {
+      "code": 6006,
+      "name": "InvalidAuthority",
+      "msg": "Invalid authority"
+    },
+    {
+      "code": 6007,
+      "name": "InvalidAssetMint",
+      "msg": "Invalid asset mint"
+    },
+    {
+      "code": 6008,
+      "name": "InvalidAssetVault",
+      "msg": "Invalid asset vault"
+    },
+    {
+      "code": 6009,
+      "name": "InvalidMetadataAccount",
+      "msg": "Invalid metadata account"
+    },
+    {
+      "code": 6010,
+      "name": "SwapRouterNotSet",
+      "msg": "Swap router is not set"
+    },
+    {
+      "code": 6011,
+      "name": "InvalidSwapRouter",
+      "msg": "Invalid swap router"
+    },
+    {
+      "code": 6012,
+      "name": "InvalidSwapResult",
+      "msg": "Invalid swap result"
+    },
+    {
+      "code": 6013,
+      "name": "CooldownActive",
+      "msg": "Cooldown is still active"
+    },
+    {
+      "code": 6014,
+      "name": "AlreadyFinalized",
+      "msg": "Redemption already finalized"
+    },
+    {
+      "code": 6015,
+      "name": "InvalidRedemptionOwner",
+      "msg": "Invalid redemption owner"
+    }
+  ],
+  "types": [
+    {
+      "name": "AssetVault",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "treasury",
+            "type": "pubkey"
+          },
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "token_account",
+            "type": "pubkey"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "RedemptionRequest",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "owner",
+            "type": "pubkey"
+          },
+          {
+            "name": "treasury",
+            "type": "pubkey"
+          },
+          {
+            "name": "mana_amount",
+            "type": "u64"
+          },
+          {
+            "name": "reserved_mim_amount",
+            "type": "u64"
+          },
+          {
+            "name": "unlock_timestamp",
+            "type": "i64"
+          },
+          {
+            "name": "finalized",
+            "type": "bool"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "TreasuryState",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "pending_authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "mim_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "mana_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "active_mim_vault",
+            "type": "pubkey"
+          },
+          {
+            "name": "pending_mim_vault",
+            "type": "pubkey"
+          },
+          {
+            "name": "pending_mana_vault",
+            "type": "pubkey"
+          },
+          {
+            "name": "cooldown_seconds",
+            "type": "u64"
+          },
+          {
+            "name": "swap_router",
+            "type": "pubkey"
+          },
+          {
+            "name": "pending_mana_supply",
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "authority_bump",
+            "type": "u8"
+          }
+        ]
+      }
+    }
+  ]
+}
