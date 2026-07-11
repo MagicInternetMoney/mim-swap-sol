@@ -354,6 +354,8 @@ pub fn initialize_with_permission(
         )?;
     }
 
+    // initialize_with_permission always uses the config-level trade_fee_rate for creator pools.
+    // This matches the permissioned model where the admin controls the base economics.
     pool_state.initialize(
         ctx.bumps.authority,
         liquidity,
@@ -369,6 +371,7 @@ pub fn initialize_with_permission(
         ctx.accounts.observation_state.key(),
         creator_fee_on,
         true,
+        ctx.accounts.amm_config.trade_fee_rate,
     );
 
     Ok(())

@@ -453,6 +453,82 @@ describe("permissionless treasury fee sweeps", () => {
       expectedAssetIncrease.toString()
     );
 
+    await manaProgram.methods
+      .setSwapRouter(cpProgram.programId)
+      .accounts({
+        authority: authority.publicKey,
+        treasuryState: treasuryPdas.treasuryState,
+      })
+      .signers([authority])
+      .rpc(confirmOptions);
+
+    const assetBalanceBeforeConversion = (
+      await getAccount(connection, assetVaults.assetTokenAccount)
+    ).amount;
+    const activeMimBeforeConversion = (
+      await getAccount(connection, treasuryPdas.activeMimVault)
+    ).amount;
+    assert.isTrue(assetBalanceBeforeConversion > 0n);
+
+    const inputVault = token0.mint.equals(assetMint)
+      ? poolState.token0Vault
+      : poolState.token1Vault;
+    const outputVault = token0.mint.equals(mimMint)
+      ? poolState.token0Vault
+      : poolState.token1Vault;
+    const routerIx = await cpProgram.methods
+      .swapBaseInput(new BN(assetBalanceBeforeConversion.toString()), new BN(1))
+      .accounts({
+        payer: treasuryPdas.treasuryAuthority,
+        authority: poolAuthority,
+        ammConfig: configAddress,
+        poolState: poolAddress,
+        inputTokenAccount: assetVaults.assetTokenAccount,
+        outputTokenAccount: treasuryPdas.activeMimVault,
+        inputVault,
+        outputVault,
+        inputTokenProgram: TOKEN_PROGRAM_ID,
+        outputTokenProgram: TOKEN_PROGRAM_ID,
+        inputTokenMint: assetMint,
+        outputTokenMint: mimMint,
+        observationState: poolState.observationKey,
+      })
+      .instruction();
+    const remainingAccounts = routerIx.keys.map((account) =>
+      account.pubkey.equals(treasuryPdas.treasuryAuthority)
+        ? { ...account, isSigner: false }
+        : account
+    );
+
+    await manaProgram.methods
+      .swapAssetToMim(
+        new BN(assetBalanceBeforeConversion.toString()),
+        new BN(1),
+        Buffer.from(routerIx.data)
+      )
+      .accounts({
+        authority: authority.publicKey,
+        treasuryState: treasuryPdas.treasuryState,
+        treasuryAuthority: treasuryPdas.treasuryAuthority,
+        assetMint,
+        assetVault: assetVaults.assetVault,
+        assetTokenAccount: assetVaults.assetTokenAccount,
+        activeMimVault: treasuryPdas.activeMimVault,
+        routerProgram: cpProgram.programId,
+      })
+      .remainingAccounts(remainingAccounts)
+      .signers([authority])
+      .rpc(confirmOptions);
+
+    assert.isTrue(
+      (await getAccount(connection, assetVaults.assetTokenAccount)).amount <
+        assetBalanceBeforeConversion
+    );
+    assert.isTrue(
+      (await getAccount(connection, treasuryPdas.activeMimVault)).amount >
+        activeMimBeforeConversion
+    );
+
     await expectTransactionFailure(async () => {
       const ix = await cpProgram.methods
         .collectProtocolFee(new BN(1), new BN(1))

@@ -8,15 +8,15 @@ export const PENDING_MIM_VAULT_SEED = "pending_mim_vault";
 export const PENDING_MANA_VAULT_SEED = "pending_mana_vault";
 export const REDEMPTION_SEED = "redemption";
 export const METADATA_SEED = "metadata";
+export const ASSET_VAULT_SEED = "asset_vault";
+export const ASSET_TOKEN_VAULT_SEED = "asset_token_vault";
+export const CP_SWAP_AUTH_SEED = "vault_and_lp_mint_auth_seed";
 
 function seed(value: string): Uint8Array {
   return new TextEncoder().encode(value);
 }
 
-export function deriveTreasuryPdas(
-  programId: PublicKey,
-  authority: PublicKey
-) {
+export function deriveTreasuryPdas(programId: PublicKey, authority: PublicKey) {
   const [treasuryState] = PublicKey.findProgramAddressSync(
     [seed(TREASURY_SEED), authority.toBuffer()],
     programId
@@ -63,16 +63,43 @@ export function deriveRedemptionRequest(
   )[0];
 }
 
+export function deriveAssetVaultPdas(
+  programId: PublicKey,
+  treasuryState: PublicKey,
+  assetMint: PublicKey
+) {
+  const [assetVault] = PublicKey.findProgramAddressSync(
+    [seed(ASSET_VAULT_SEED), treasuryState.toBuffer(), assetMint.toBuffer()],
+    programId
+  );
+  const [assetTokenAccount] = PublicKey.findProgramAddressSync(
+    [
+      seed(ASSET_TOKEN_VAULT_SEED),
+      treasuryState.toBuffer(),
+      assetMint.toBuffer(),
+    ],
+    programId
+  );
+
+  return {
+    assetVault,
+    assetTokenAccount,
+  };
+}
+
+export function deriveCpSwapAuthority(programId: PublicKey): PublicKey {
+  return PublicKey.findProgramAddressSync(
+    [seed(CP_SWAP_AUTH_SEED)],
+    programId
+  )[0];
+}
+
 export function deriveMetadataPda(
   metadataProgramId: PublicKey,
   mint: PublicKey
 ): PublicKey {
   return PublicKey.findProgramAddressSync(
-    [
-      seed(METADATA_SEED),
-      metadataProgramId.toBuffer(),
-      mint.toBuffer(),
-    ],
+    [seed(METADATA_SEED), metadataProgramId.toBuffer(), mint.toBuffer()],
     metadataProgramId
   )[0];
 }

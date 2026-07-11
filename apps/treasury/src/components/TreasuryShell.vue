@@ -1,24 +1,46 @@
 <template>
   <main class="min-h-screen bg-[#f3f4ee] text-ink">
-    <section class="mx-auto flex w-full max-w-7xl flex-col gap-5 px-4 py-4 sm:px-6 lg:px-8">
-      <header class="flex flex-col gap-4 border-b border-black/10 pb-4 lg:flex-row lg:items-center lg:justify-between">
+    <section
+      class="mx-auto flex w-full max-w-7xl flex-col gap-5 px-4 py-4 sm:px-6 lg:px-8"
+    >
+      <header
+        class="flex flex-col gap-4 border-b border-black/10 pb-4 lg:flex-row lg:items-center lg:justify-between"
+      >
         <div class="flex min-w-0 items-center gap-3">
-          <div class="grid size-11 shrink-0 place-items-center rounded-lg bg-ink text-white shadow-sm">
+          <div
+            class="grid size-11 shrink-0 place-items-center rounded-lg bg-ink text-white shadow-sm"
+          >
             <Landmark class="size-5" aria-hidden="true" />
           </div>
           <div class="min-w-0">
-            <h1 class="truncate text-2xl font-black tracking-normal sm:text-3xl">
+            <h1
+              class="truncate text-2xl font-black tracking-normal sm:text-3xl"
+            >
               Mana Treasury
             </h1>
-            <div class="mt-1 flex flex-wrap items-center gap-2 text-sm text-black/60">
-              <span class="rounded-md bg-white px-2 py-1 font-semibold text-black/70 ring-1 ring-black/10">
+            <div
+              class="mt-1 flex flex-wrap items-center gap-2 text-sm text-black/60"
+            >
+              <span
+                class="rounded-md bg-white px-2 py-1 font-semibold text-black/70 ring-1 ring-black/10"
+              >
                 {{ reserveSymbol }} backed
               </span>
               <span
                 class="rounded-md px-2 py-1 font-semibold ring-1"
-                :class="config.deployed ? 'bg-emerald-50 text-emerald-700 ring-emerald-200' : 'bg-amber-50 text-amber-800 ring-amber-200'"
+                :class="
+                  config.deployed
+                    ? 'bg-emerald-50 text-emerald-700 ring-emerald-200'
+                    : 'bg-amber-50 text-amber-800 ring-amber-200'
+                "
               >
                 {{ config.deployed ? "Deployed" : "Undeployed" }}
+              </span>
+              <span
+                v-if="isAdminWallet"
+                class="rounded-md bg-black px-2 py-1 font-semibold text-white ring-1 ring-black"
+              >
+                Admin
               </span>
             </div>
           </div>
@@ -34,13 +56,19 @@
             <Info class="size-4" aria-hidden="true" />
             About
           </button>
-          <div class="grid grid-cols-2 rounded-lg border border-black/10 bg-white p-1 shadow-sm">
+          <div
+            class="grid grid-cols-2 rounded-lg border border-black/10 bg-white p-1 shadow-sm"
+          >
             <button
               v-for="option in clusterOptions"
               :key="option"
               type="button"
               class="rounded-md px-4 py-2 text-sm font-bold transition"
-              :class="cluster === option ? 'bg-ink text-white shadow-sm' : 'text-black/60 hover:bg-black/5'"
+              :class="
+                cluster === option
+                  ? 'bg-ink text-white shadow-sm'
+                  : 'text-black/60 hover:bg-black/5'
+              "
               @click="selectCluster(option)"
             >
               {{ getClusterConfig(option).label }}
@@ -68,7 +96,8 @@
         v-if="!config.deployed"
         class="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-900"
       >
-        Mainnet config is present with the production MIM mint. Treasury actions are disabled until the mainnet treasury is deployed.
+        Mainnet config is present with the production MIM mint. Treasury actions
+        are disabled until the mainnet treasury is deployed.
       </section>
 
       <section
@@ -115,9 +144,13 @@
         />
       </section>
 
-      <section class="grid gap-4 xl:grid-cols-[minmax(0,1.15fr)_minmax(360px,0.85fr)]">
+      <section
+        class="grid gap-4 xl:grid-cols-[minmax(0,1.15fr)_minmax(360px,0.85fr)]"
+      >
         <div class="grid gap-4">
-          <section class="rounded-lg border border-black/10 bg-white p-4 shadow-sm">
+          <section
+            class="rounded-lg border border-black/10 bg-white p-4 shadow-sm"
+          >
             <div class="mb-4 flex items-center justify-between gap-3">
               <h2 class="text-lg font-black">Vaults</h2>
               <button
@@ -127,7 +160,11 @@
                 :disabled="loading"
                 @click="refresh"
               >
-                <RefreshCw class="size-4" :class="{ 'animate-spin': loading }" aria-hidden="true" />
+                <RefreshCw
+                  class="size-4"
+                  :class="{ 'animate-spin': loading }"
+                  aria-hidden="true"
+                />
               </button>
             </div>
             <div class="grid gap-3 md:grid-cols-3">
@@ -152,10 +189,14 @@
             </div>
           </section>
 
-          <section class="rounded-lg border border-black/10 bg-white p-4 shadow-sm">
+          <section
+            class="rounded-lg border border-black/10 bg-white p-4 shadow-sm"
+          >
             <div class="mb-4 flex items-center justify-between gap-3">
               <h2 class="text-lg font-black">User balances</h2>
-              <span class="text-xs font-bold uppercase tracking-normal text-black/45">
+              <span
+                class="text-xs font-bold uppercase tracking-normal text-black/45"
+              >
                 {{ walletStatus }}
               </span>
             </div>
@@ -201,34 +242,56 @@
                 :disabled="transactionsLoading"
                 @click="refreshTransactions"
               >
-                <RefreshCw class="size-4" :class="{ 'animate-spin': transactionsLoading }" aria-hidden="true" />
+                <RefreshCw
+                  class="size-4"
+                  :class="{ 'animate-spin': transactionsLoading }"
+                  aria-hidden="true"
+                />
               </button>
             </div>
 
-            <div class="mb-4 grid grid-cols-3 rounded-lg border border-black/10 bg-field p-1">
+            <div
+              class="mb-4 grid grid-cols-3 rounded-lg border border-black/10 bg-field p-1"
+            >
               <button
                 v-for="option in transactionScopeOptions"
                 :key="option.value"
                 type="button"
                 :data-testid="`transaction-tab-${option.value}`"
                 class="rounded-md px-2 py-2 text-sm font-black transition"
-                :class="transactionScope === option.value ? 'bg-ink text-white shadow-sm' : 'text-black/55 hover:bg-white'"
+                :class="
+                  transactionScope === option.value
+                    ? 'bg-ink text-white shadow-sm'
+                    : 'text-black/55 hover:bg-white'
+                "
                 @click="transactionScope = option.value"
               >
                 {{ option.label }}
               </button>
             </div>
 
-            <div v-if="transactionError" class="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-800">
+            <div
+              v-if="transactionError"
+              class="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-800"
+            >
               {{ transactionError }}
             </div>
-            <div v-else-if="transactionFeedUnavailable" class="rounded-lg bg-field px-3 py-6 text-center text-sm font-semibold text-black/50">
+            <div
+              v-else-if="transactionFeedUnavailable"
+              class="rounded-lg bg-field px-3 py-6 text-center text-sm font-semibold text-black/50"
+            >
               {{ transactionFeedUnavailable }}
             </div>
-            <div v-else-if="transactionsLoading" class="rounded-lg bg-field px-3 py-6 text-center text-sm font-semibold text-black/50">
+            <div
+              v-else-if="transactionsLoading"
+              class="rounded-lg bg-field px-3 py-6 text-center text-sm font-semibold text-black/50"
+            >
               Loading transactions
             </div>
-            <div v-else-if="recentTransactions.length === 0" class="rounded-lg bg-field px-3 py-6 text-center text-sm font-semibold text-black/50">
+            <div
+              v-else-if="recentTransactions.length === 0"
+              class="rounded-lg bg-field px-3 py-6 text-center text-sm font-semibold text-black/50"
+            >
               No recent transactions found
             </div>
             <div v-else class="grid gap-2">
@@ -244,8 +307,13 @@
                     target="_blank"
                     rel="noreferrer"
                   >
-                    <span class="truncate">{{ shortAddress(transaction.signature) }}</span>
-                    <ExternalLink class="size-3.5 shrink-0" aria-hidden="true" />
+                    <span class="truncate">{{
+                      shortAddress(transaction.signature)
+                    }}</span>
+                    <ExternalLink
+                      class="size-3.5 shrink-0"
+                      aria-hidden="true"
+                    />
                   </a>
                   <p class="mt-1 text-xs font-semibold text-black/45">
                     {{ formatTransactionTime(transaction.blockTime) }}
@@ -253,12 +321,25 @@
                 </div>
                 <span
                   class="w-fit rounded-md px-2 py-1 text-xs font-black"
-                  :class="transaction.err ? 'bg-red-50 text-red-700' : 'bg-emerald-50 text-emerald-700'"
+                  :class="
+                    transaction.err
+                      ? 'bg-red-50 text-red-700'
+                      : 'bg-emerald-50 text-emerald-700'
+                  "
                 >
-                  {{ transaction.err ? "Failed" : transaction.confirmationStatus ?? "Confirmed" }}
+                  {{
+                    transaction.err
+                      ? "Failed"
+                      : transaction.confirmationStatus ?? "Confirmed"
+                  }}
                 </span>
-                <span class="text-xs font-bold text-black/45">Slot {{ transaction.slot }}</span>
-                <span v-if="transaction.memo" class="truncate text-xs font-semibold text-black/45">
+                <span class="text-xs font-bold text-black/45"
+                  >Slot {{ transaction.slot }}</span
+                >
+                <span
+                  v-if="transaction.memo"
+                  class="truncate text-xs font-semibold text-black/45"
+                >
                   {{ transaction.memo }}
                 </span>
               </article>
@@ -307,7 +388,9 @@
             @submit="prepareAction('destake')"
           />
 
-          <section class="rounded-lg border border-black/10 bg-white p-4 shadow-sm">
+          <section
+            class="rounded-lg border border-black/10 bg-white p-4 shadow-sm"
+          >
             <div class="mb-3 flex items-center justify-between gap-3">
               <div class="flex items-center gap-2">
                 <Clock3 class="size-5 text-ink" aria-hidden="true" />
@@ -315,7 +398,11 @@
               </div>
               <span
                 class="rounded-md px-2 py-1 text-xs font-black"
-                :class="canFinalize ? 'bg-emerald-50 text-emerald-700' : 'bg-black/5 text-black/55'"
+                :class="
+                  canFinalize
+                    ? 'bg-emerald-50 text-emerald-700'
+                    : 'bg-black/5 text-black/55'
+                "
               >
                 {{ finalizeStatus }}
               </span>
@@ -323,11 +410,15 @@
             <div v-if="redemption" class="space-y-2 text-sm">
               <div class="flex justify-between gap-3">
                 <span class="text-black/55">Reserved</span>
-                <span class="font-black">{{ formatReserve(redemption.reservedReserveAmount) }}</span>
+                <span class="font-black">{{
+                  formatReserve(redemption.reservedReserveAmount)
+                }}</span>
               </div>
               <div class="flex justify-between gap-3">
                 <span class="text-black/55">MANA</span>
-                <span class="font-black">{{ formatMana(redemption.manaAmount) }}</span>
+                <span class="font-black">{{
+                  formatMana(redemption.manaAmount)
+                }}</span>
               </div>
               <div class="flex justify-between gap-3">
                 <span class="text-black/55">Unlock</span>
@@ -343,11 +434,18 @@
               :disabled="finalizeActionDisabled || busyAction === 'finalize'"
               @click="prepareAction('finalize')"
             >
-              <Loader2 v-if="busyAction === 'finalize'" class="size-4 animate-spin" aria-hidden="true" />
+              <Loader2
+                v-if="busyAction === 'finalize'"
+                class="size-4 animate-spin"
+                aria-hidden="true"
+              />
               <CheckCircle2 v-else class="size-4" aria-hidden="true" />
               Finalize destake
             </button>
-            <p v-if="finalizeActionMessage" class="mt-3 text-sm font-semibold text-black/55">
+            <p
+              v-if="finalizeActionMessage"
+              class="mt-3 text-sm font-semibold text-black/55"
+            >
               {{ finalizeActionMessage }}
             </p>
           </section>
@@ -355,11 +453,343 @@
       </section>
 
       <section
+        v-if="isAdminWallet"
+        class="rounded-lg border border-black/10 bg-white p-4 shadow-sm"
+        data-testid="admin-panel"
+      >
+        <div
+          class="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between"
+        >
+          <div class="flex items-center gap-2">
+            <ShieldCheck class="size-5 text-ink" aria-hidden="true" />
+            <h2 class="text-lg font-black">Admin</h2>
+          </div>
+          <span class="truncate text-xs font-bold text-black/45">
+            {{ snapshot?.treasuryState.authority }}
+          </span>
+        </div>
+
+        <div class="grid gap-4 xl:grid-cols-2">
+          <section class="rounded-lg border border-black/10 bg-field p-4">
+            <div class="mb-3 flex items-center gap-2">
+              <Settings class="size-4 text-ink" aria-hidden="true" />
+              <h3 class="font-black">Treasury settings</h3>
+            </div>
+            <div class="grid gap-3">
+              <label class="grid gap-2">
+                <span
+                  class="text-xs font-black uppercase tracking-normal text-black/45"
+                  >Swap router</span
+                >
+                <input
+                  v-model="forms.adminRouter"
+                  class="h-11 w-full rounded-lg border border-black/10 bg-white px-3 text-sm font-bold outline-none transition focus:border-ink"
+                  placeholder="Router program address"
+                />
+              </label>
+              <button
+                type="button"
+                class="flex h-10 items-center justify-center gap-2 rounded-lg bg-ink px-4 text-sm font-black text-white transition hover:bg-black disabled:cursor-not-allowed disabled:bg-black/20"
+                :disabled="adminActionBlocked || busyAction === 'setRouter'"
+                @click="prepareAdminAction('setRouter')"
+              >
+                <Loader2
+                  v-if="busyAction === 'setRouter'"
+                  class="size-4 animate-spin"
+                  aria-hidden="true"
+                />
+                <Settings v-else class="size-4" aria-hidden="true" />
+                Set router
+              </button>
+
+              <label class="grid gap-2">
+                <span
+                  class="text-xs font-black uppercase tracking-normal text-black/45"
+                  >Cooldown seconds</span
+                >
+                <input
+                  v-model="forms.adminCooldown"
+                  class="h-11 w-full rounded-lg border border-black/10 bg-white px-3 text-sm font-bold outline-none transition focus:border-ink"
+                  inputmode="numeric"
+                  placeholder="30"
+                />
+              </label>
+              <button
+                type="button"
+                class="flex h-10 items-center justify-center gap-2 rounded-lg bg-ink px-4 text-sm font-black text-white transition hover:bg-black disabled:cursor-not-allowed disabled:bg-black/20"
+                :disabled="adminActionBlocked || busyAction === 'setCooldown'"
+                @click="prepareAdminAction('setCooldown')"
+              >
+                <Loader2
+                  v-if="busyAction === 'setCooldown'"
+                  class="size-4 animate-spin"
+                  aria-hidden="true"
+                />
+                <Clock3 v-else class="size-4" aria-hidden="true" />
+                Set cooldown
+              </button>
+            </div>
+          </section>
+
+          <section class="rounded-lg border border-black/10 bg-field p-4">
+            <div class="mb-3 flex items-center gap-2">
+              <Search class="size-4 text-ink" aria-hidden="true" />
+              <h3 class="font-black">Fee pool</h3>
+            </div>
+            <div class="grid gap-3">
+              <label class="grid gap-2">
+                <span
+                  class="text-xs font-black uppercase tracking-normal text-black/45"
+                  >Pool state</span
+                >
+                <input
+                  v-model="forms.adminPool"
+                  class="h-11 w-full rounded-lg border border-black/10 bg-white px-3 text-sm font-bold outline-none transition focus:border-ink"
+                  placeholder="CP-swap pool address"
+                />
+              </label>
+              <button
+                type="button"
+                class="flex h-10 items-center justify-center gap-2 rounded-lg bg-ink px-4 text-sm font-black text-white transition hover:bg-black disabled:cursor-not-allowed disabled:bg-black/20"
+                :disabled="
+                  adminActionBlocked ||
+                  adminPoolLoading ||
+                  !forms.adminPool.trim()
+                "
+                @click="inspectAdminPool"
+              >
+                <Loader2
+                  v-if="adminPoolLoading"
+                  class="size-4 animate-spin"
+                  aria-hidden="true"
+                />
+                <Search v-else class="size-4" aria-hidden="true" />
+                Inspect pool
+              </button>
+            </div>
+            <p
+              v-if="adminPoolError"
+              class="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-800"
+            >
+              {{ adminPoolError }}
+            </p>
+          </section>
+        </div>
+
+        <section v-if="adminPool" class="mt-4 grid gap-3">
+          <div
+            class="flex flex-col gap-3 rounded-lg border border-black/10 bg-field p-4"
+          >
+            <div
+              class="flex flex-col gap-1 md:flex-row md:items-center md:justify-between"
+            >
+              <h3 class="font-black">Pool fee routing</h3>
+              <span class="truncate text-xs font-bold text-black/45">{{
+                adminPool.address
+              }}</span>
+            </div>
+            <div class="grid gap-3 lg:grid-cols-2">
+              <article
+                v-for="side in adminPool.sides"
+                :key="side.mint"
+                class="rounded-lg border border-black/10 bg-white p-3"
+                data-testid="admin-pool-side"
+              >
+                <div class="mb-3 flex items-center justify-between gap-3">
+                  <h4 class="font-black">Token {{ side.index }}</h4>
+                  <span
+                    class="rounded-md px-2 py-1 text-xs font-black"
+                    :class="
+                      side.isReserveMint
+                        ? 'bg-emerald-50 text-emerald-700'
+                        : assetVaultReady(side)
+                        ? 'bg-sky-50 text-sky-700'
+                        : 'bg-amber-50 text-amber-800'
+                    "
+                  >
+                    {{ feeReceiverLabel(side) }}
+                  </span>
+                </div>
+                <dl class="grid gap-2 text-sm">
+                  <div class="flex justify-between gap-3">
+                    <dt class="text-black/55">Mint</dt>
+                    <dd class="truncate font-black">
+                      {{ shortAddress(side.mint) }}
+                    </dd>
+                  </div>
+                  <div class="flex justify-between gap-3">
+                    <dt class="text-black/55">Protocol</dt>
+                    <dd class="font-black">
+                      {{ formatPoolAmount(side.protocolFees, side.decimals) }}
+                    </dd>
+                  </div>
+                  <div class="flex justify-between gap-3">
+                    <dt class="text-black/55">Fund</dt>
+                    <dd class="font-black">
+                      {{ formatPoolAmount(side.fundFees, side.decimals) }}
+                    </dd>
+                  </div>
+                  <div class="flex justify-between gap-3">
+                    <dt class="text-black/55">Receiver</dt>
+                    <dd class="truncate font-black">
+                      {{ shortAddress(side.feeReceiver) }}
+                    </dd>
+                  </div>
+                </dl>
+                <div
+                  v-if="side.assetVault"
+                  class="mt-3 grid gap-2 sm:grid-cols-2"
+                >
+                  <button
+                    type="button"
+                    class="flex h-10 items-center justify-center gap-2 rounded-lg border border-black/10 bg-white px-3 text-sm font-black text-black/70 transition hover:bg-black/5 disabled:cursor-not-allowed disabled:text-black/30"
+                    :disabled="
+                      assetVaultReady(side) ||
+                      adminActionBlocked ||
+                      busyAction === 'createAssetVault'
+                    "
+                    @click="prepareAdminAction('createAssetVault', side)"
+                  >
+                    <Loader2
+                      v-if="busyAction === 'createAssetVault'"
+                      class="size-4 animate-spin"
+                      aria-hidden="true"
+                    />
+                    <PlusCircle v-else class="size-4" aria-hidden="true" />
+                    Create vault
+                  </button>
+                  <button
+                    type="button"
+                    class="flex h-10 items-center justify-center gap-2 rounded-lg border border-black/10 bg-white px-3 text-sm font-black text-black/70 transition hover:bg-black/5"
+                    @click="useSideForConversion(side)"
+                  >
+                    <ArrowRightLeft class="size-4" aria-hidden="true" />
+                    Convert
+                  </button>
+                </div>
+              </article>
+            </div>
+            <div class="grid gap-2 sm:grid-cols-2">
+              <button
+                type="button"
+                class="flex h-10 items-center justify-center gap-2 rounded-lg bg-ink px-4 text-sm font-black text-white transition hover:bg-black disabled:cursor-not-allowed disabled:bg-black/20"
+                :disabled="
+                  adminActionBlocked ||
+                  !adminPool.canSweepProtocolFees ||
+                  busyAction === 'sweepProtocol'
+                "
+                @click="prepareAdminAction('sweepProtocol')"
+              >
+                <Loader2
+                  v-if="busyAction === 'sweepProtocol'"
+                  class="size-4 animate-spin"
+                  aria-hidden="true"
+                />
+                <Coins v-else class="size-4" aria-hidden="true" />
+                Sweep protocol fees
+              </button>
+              <button
+                type="button"
+                class="flex h-10 items-center justify-center gap-2 rounded-lg bg-ink px-4 text-sm font-black text-white transition hover:bg-black disabled:cursor-not-allowed disabled:bg-black/20"
+                :disabled="
+                  adminActionBlocked ||
+                  !adminPool.canSweepFundFees ||
+                  busyAction === 'sweepFund'
+                "
+                @click="prepareAdminAction('sweepFund')"
+              >
+                <Loader2
+                  v-if="busyAction === 'sweepFund'"
+                  class="size-4 animate-spin"
+                  aria-hidden="true"
+                />
+                <Coins v-else class="size-4" aria-hidden="true" />
+                Sweep fund fees
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <section class="mt-4 rounded-lg border border-black/10 bg-field p-4">
+          <div class="mb-3 flex items-center gap-2">
+            <ArrowRightLeft class="size-4 text-ink" aria-hidden="true" />
+            <h3 class="font-black">Convert asset fees</h3>
+          </div>
+          <div class="grid gap-3 lg:grid-cols-2">
+            <label class="grid gap-2">
+              <span
+                class="text-xs font-black uppercase tracking-normal text-black/45"
+                >Asset mint</span
+              >
+              <input
+                v-model="forms.convertAssetMint"
+                class="h-11 w-full rounded-lg border border-black/10 bg-white px-3 text-sm font-bold outline-none transition focus:border-ink"
+              />
+            </label>
+            <label class="grid gap-2">
+              <span
+                class="text-xs font-black uppercase tracking-normal text-black/45"
+                >Route pool</span
+              >
+              <input
+                v-model="forms.convertRoutePool"
+                class="h-11 w-full rounded-lg border border-black/10 bg-white px-3 text-sm font-bold outline-none transition focus:border-ink"
+              />
+            </label>
+            <label class="grid gap-2">
+              <span
+                class="text-xs font-black uppercase tracking-normal text-black/45"
+                >Amount base units</span
+              >
+              <input
+                v-model="forms.convertAmount"
+                inputmode="numeric"
+                class="h-11 w-full rounded-lg border border-black/10 bg-white px-3 text-sm font-bold outline-none transition focus:border-ink"
+                placeholder="0"
+              />
+            </label>
+            <label class="grid gap-2">
+              <span
+                class="text-xs font-black uppercase tracking-normal text-black/45"
+                >Minimum {{ reserveSymbol }} base units</span
+              >
+              <input
+                v-model="forms.convertMinReserveOut"
+                inputmode="numeric"
+                class="h-11 w-full rounded-lg border border-black/10 bg-white px-3 text-sm font-bold outline-none transition focus:border-ink"
+                placeholder="0"
+              />
+            </label>
+          </div>
+          <button
+            type="button"
+            class="mt-3 flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-ink px-4 text-sm font-black text-white transition hover:bg-black disabled:cursor-not-allowed disabled:bg-black/20"
+            :disabled="
+              adminActionBlocked ||
+              !conversionReady ||
+              busyAction === 'convertAsset'
+            "
+            @click="prepareAdminAction('convertAsset')"
+          >
+            <Loader2
+              v-if="busyAction === 'convertAsset'"
+              class="size-4 animate-spin"
+              aria-hidden="true"
+            />
+            <ArrowRightLeft v-else class="size-4" aria-hidden="true" />
+            Convert to {{ reserveSymbol }}
+          </button>
+        </section>
+      </section>
+
+      <section
         v-if="aboutOpen"
         class="fixed inset-0 z-50 grid place-items-center bg-black/30 px-4 py-6 backdrop-blur-sm"
         data-testid="about-modal"
       >
-        <div class="max-h-[calc(100vh-3rem)] w-full max-w-3xl overflow-auto rounded-lg border border-black/10 bg-white p-5 shadow-2xl">
+        <div
+          class="max-h-[calc(100vh-3rem)] w-full max-w-3xl overflow-auto rounded-lg border border-black/10 bg-white p-5 shadow-2xl"
+        >
           <div class="flex items-start justify-between gap-4">
             <div>
               <h2 class="text-xl font-black">About Mana Treasury</h2>
@@ -383,10 +813,17 @@
               :key="row.label"
               class="grid gap-2 rounded-lg bg-field px-3 py-2 sm:grid-cols-[150px_minmax(0,1fr)_auto_auto] sm:items-center"
             >
-              <span class="text-sm font-black text-black/55">{{ row.label }}</span>
+              <span class="text-sm font-black text-black/55">{{
+                row.label
+              }}</span>
               <div class="min-w-0">
-                <p class="text-sm font-black text-black/75">{{ shortAddress(row.address) }}</p>
-                <code class="mt-1 block min-w-0 break-all text-xs font-bold text-black/55">{{ row.address }}</code>
+                <p class="text-sm font-black text-black/75">
+                  {{ shortAddress(row.address) }}
+                </p>
+                <code
+                  class="mt-1 block min-w-0 break-all text-xs font-bold text-black/55"
+                  >{{ row.address }}</code
+                >
               </div>
               <button
                 type="button"
@@ -394,7 +831,11 @@
                 :title="`Copy ${row.label}`"
                 @click="copyAddress(row)"
               >
-                <Check v-if="copiedAddressLabel === row.label" class="size-4 text-emerald-700" aria-hidden="true" />
+                <Check
+                  v-if="copiedAddressLabel === row.label"
+                  class="size-4 text-emerald-700"
+                  aria-hidden="true"
+                />
                 <Copy v-else class="size-4" aria-hidden="true" />
               </button>
               <a
@@ -408,7 +849,10 @@
               </a>
             </div>
           </div>
-          <div v-else class="mt-5 rounded-lg bg-field px-3 py-6 text-center text-sm font-semibold text-black/50">
+          <div
+            v-else
+            class="mt-5 rounded-lg bg-field px-3 py-6 text-center text-sm font-semibold text-black/50"
+          >
             Treasury is not deployed on this cluster.
           </div>
         </div>
@@ -418,7 +862,9 @@
         v-if="confirmation"
         class="fixed inset-0 z-40 grid place-items-center bg-black/30 px-4 py-6 backdrop-blur-sm"
       >
-        <div class="w-full max-w-xl rounded-lg border border-black/10 bg-white p-5 shadow-2xl">
+        <div
+          class="w-full max-w-xl rounded-lg border border-black/10 bg-white p-5 shadow-2xl"
+        >
           <div class="flex items-start justify-between gap-4">
             <div>
               <h2 class="text-xl font-black">{{ confirmation.title }}</h2>
@@ -443,24 +889,39 @@
               class="flex justify-between gap-3 rounded-md bg-field px-3 py-2"
             >
               <span class="text-black/55">{{ row.label }}</span>
-              <span class="break-all text-right font-black">{{ row.value }}</span>
+              <span class="break-all text-right font-black">{{
+                row.value
+              }}</span>
             </div>
           </div>
 
           <div
             class="mt-4 rounded-lg border px-3 py-2 text-sm"
-            :class="confirmation.simulation.err ? 'border-red-200 bg-red-50 text-red-900' : 'border-emerald-200 bg-emerald-50 text-emerald-900'"
+            :class="
+              confirmation.simulation.err
+                ? 'border-red-200 bg-red-50 text-red-900'
+                : 'border-emerald-200 bg-emerald-50 text-emerald-900'
+            "
           >
             <div class="flex items-center gap-2 font-black">
-              <XCircle v-if="confirmation.simulation.err" class="size-4" aria-hidden="true" />
+              <XCircle
+                v-if="confirmation.simulation.err"
+                class="size-4"
+                aria-hidden="true"
+              />
               <CheckCircle2 v-else class="size-4" aria-hidden="true" />
-              {{ confirmation.simulation.err ? "Transaction check failed" : "Ready to send" }}
+              {{
+                confirmation.simulation.err
+                  ? "Transaction check failed"
+                  : "Ready to send"
+              }}
             </div>
             <p v-if="confirmation.simulation.err" class="mt-1 break-words">
               {{ transactionCheckMessage(confirmation) }}
             </p>
             <p v-else class="mt-1">
-              Estimated compute: {{ confirmation.simulation.unitsConsumed ?? "unknown" }} units
+              Estimated compute:
+              {{ confirmation.simulation.unitsConsumed ?? "unknown" }} units
             </p>
           </div>
 
@@ -468,9 +929,15 @@
             v-if="confirmation.simulation.logs?.length"
             class="mt-4 rounded-lg bg-ink p-3 text-xs text-white/80"
           >
-            <summary class="cursor-pointer font-black text-white">Program details</summary>
+            <summary class="cursor-pointer font-black text-white">
+              Program details
+            </summary>
             <div class="mt-2 max-h-36 overflow-auto">
-              <p v-for="log in confirmation.simulation.logs.slice(-8)" :key="log" class="break-words">
+              <p
+                v-for="log in confirmation.simulation.logs.slice(-8)"
+                :key="log"
+                class="break-words"
+              >
                 {{ log }}
               </p>
             </div>
@@ -490,7 +957,11 @@
               :disabled="sending || Boolean(confirmation.simulation.err)"
               @click="sendConfirmed"
             >
-              <Loader2 v-if="sending" class="size-4 animate-spin" aria-hidden="true" />
+              <Loader2
+                v-if="sending"
+                class="size-4 animate-spin"
+                aria-hidden="true"
+              />
               <Send v-else class="size-4" aria-hidden="true" />
               Sign and send
             </button>
@@ -522,22 +993,28 @@
 <script setup lang="ts">
 import { WalletMultiButton } from "@solana/wallet-adapter-vue-ui";
 import { useWallet } from "@solana/wallet-adapter-vue";
-import type { Transaction } from "@solana/web3.js";
+import { PublicKey, type Transaction } from "@solana/web3.js";
 import {
   AlertTriangle,
   ArrowDownToLine,
+  ArrowRightLeft,
   ArrowUpFromLine,
   Check,
   CheckCircle2,
   Clock3,
+  Coins,
   Copy,
   ExternalLink,
   Gift,
   Info,
   Landmark,
   Loader2,
+  PlusCircle,
   RefreshCw,
   Send,
+  Settings,
+  ShieldCheck,
+  Search,
   X,
   XCircle,
 } from "lucide-vue-next";
@@ -553,11 +1030,7 @@ import {
   type Component,
   type PropType,
 } from "vue";
-import {
-  formatRatio,
-  formatTokenAmount,
-  parseUiAmount,
-} from "../lib/amounts";
+import { formatRatio, formatTokenAmount, parseUiAmount } from "../lib/amounts";
 import {
   CLUSTERS,
   explorerUrl,
@@ -568,17 +1041,26 @@ import {
   type ClusterName,
 } from "../lib/solana.config";
 import {
+  buildCollectCpSwapFeesTransaction,
+  buildCreateAssetVaultTransaction,
   buildDepositTransaction,
   buildDonateReserveTransaction,
   buildFinalizeDestakeTransaction,
+  buildSetCooldownSecondsTransaction,
+  buildSetSwapRouterTransaction,
+  buildSwapAssetToMimViaCpSwapTransaction,
   buildStartDestakeTransaction,
   createConnection,
   createDepositPreview,
   createDestakePreview,
+  isTreasuryAuthorityWallet,
+  loadCpSwapPoolSnapshot,
   loadRecentTransactions,
   loadTreasurySnapshot,
   resolveTransactionFeedTarget,
   simulateTreasuryTransaction,
+  type CpSwapPoolSideSnapshot,
+  type CpSwapPoolSnapshot,
   type PreparedSimulation,
   type RecentTransaction,
   type RedemptionSnapshot,
@@ -586,7 +1068,15 @@ import {
   type TransactionFeedScope,
 } from "../lib/treasury-client";
 
-type ActionKind = "deposit" | "donate" | "destake" | "finalize";
+type UserActionKind = "deposit" | "donate" | "destake" | "finalize";
+type AdminActionKind =
+  | "setRouter"
+  | "setCooldown"
+  | "createAssetVault"
+  | "sweepProtocol"
+  | "sweepFund"
+  | "convertAsset";
+type ActionKind = UserActionKind | AdminActionKind;
 type Confirmation = {
   kind: ActionKind;
   title: string;
@@ -620,11 +1110,21 @@ const transactionScope = ref<TransactionFeedScope>("treasury");
 const recentTransactions = ref<RecentTransaction[]>([]);
 const transactionsLoading = ref(false);
 const transactionError = ref("");
+const adminPool = ref<CpSwapPoolSnapshot | null>(null);
+const adminPoolLoading = ref(false);
+const adminPoolError = ref("");
 const now = ref(Math.floor(Date.now() / 1000));
 const forms = reactive({
   deposit: "",
   donate: "",
   destake: "",
+  adminRouter: "",
+  adminCooldown: "",
+  adminPool: "",
+  convertAssetMint: "",
+  convertRoutePool: "",
+  convertAmount: "",
+  convertMinReserveOut: "",
 });
 
 let timer: ReturnType<typeof setInterval> | undefined;
@@ -639,6 +1139,9 @@ const reserveSymbol = computed(() =>
 const walletConnected = computed(
   () => wallet.connected.value && Boolean(wallet.publicKey.value)
 );
+const isAdminWallet = computed(() =>
+  isTreasuryAuthorityWallet(snapshot.value, wallet.publicKey.value)
+);
 const validationErrors = computed(() => snapshot.value?.validationErrors ?? []);
 const hasValidationErrors = computed(() => validationErrors.value.length > 0);
 const actionsDisabled = computed(
@@ -651,8 +1154,8 @@ const actionsDisabled = computed(
 const redemption = computed<RedemptionSnapshot | null>(
   () => snapshot.value?.user?.redemptionRequest ?? null
 );
-const hasOpenRedemption = computed(
-  () => Boolean(redemption.value && !redemption.value.finalized)
+const hasOpenRedemption = computed(() =>
+  Boolean(redemption.value && !redemption.value.finalized)
 );
 const canFinalize = computed(
   () =>
@@ -672,7 +1175,9 @@ const unlockText = computed(() => {
   return `${remaining}s`;
 });
 const walletStatus = computed(() =>
-  wallet.publicKey.value ? shortAddress(wallet.publicKey.value.toString()) : "Disconnected"
+  wallet.publicKey.value
+    ? shortAddress(wallet.publicKey.value.toString())
+    : "Disconnected"
 );
 const metricReserve = computed(() =>
   formatReserve(snapshot.value?.activeReserveVault.amount)
@@ -691,19 +1196,25 @@ const metricCooldown = computed(() =>
   snapshot.value
     ? `${snapshot.value.treasuryState.cooldownSeconds}s`
     : config.value.treasury?.cooldownSeconds
-      ? `${config.value.treasury.cooldownSeconds}s`
-      : "n/a"
+    ? `${config.value.treasury.cooldownSeconds}s`
+    : "n/a"
 );
 const cooldownSubValue = computed(() =>
   redemption.value ? finalizeStatus.value : "No request"
 );
 const activeReserveAddress = computed(
-  () => snapshot.value?.activeReserveVault.address ?? config.value.treasury?.activeReserveVault ?? ""
+  () =>
+    snapshot.value?.activeReserveVault.address ??
+    config.value.treasury?.activeReserveVault ??
+    ""
 );
 const manaMintAddress = computed(
-  () => snapshot.value?.manaMint.address ?? config.value.treasury?.manaMint ?? ""
+  () =>
+    snapshot.value?.manaMint.address ?? config.value.treasury?.manaMint ?? ""
 );
-const depositPreviewText = computed(() => previewText("deposit", forms.deposit));
+const depositPreviewText = computed(() =>
+  previewText("deposit", forms.deposit)
+);
 const donatePreviewText = computed(() => {
   try {
     const amount = parseUiAmount(forms.donate || "0", reserveDecimals.value);
@@ -712,8 +1223,12 @@ const donatePreviewText = computed(() => {
     return "";
   }
 });
-const destakePreviewText = computed(() => previewText("destake", forms.destake));
-const reserveDecimals = computed(() => snapshot.value?.reserveMint.decimals ?? 6);
+const destakePreviewText = computed(() =>
+  previewText("destake", forms.destake)
+);
+const reserveDecimals = computed(
+  () => snapshot.value?.reserveMint.decimals ?? 6
+);
 const manaDecimals = computed(() => snapshot.value?.manaMint.decimals ?? 6);
 const depositActionMessage = computed(() =>
   reserveSourceIssue(parsedActionAmount(forms.deposit, reserveDecimals.value))
@@ -744,6 +1259,16 @@ const destakeActionDisabled = computed(
 );
 const finalizeActionDisabled = computed(
   () => actionsDisabled.value || Boolean(finalizeActionMessage.value)
+);
+const adminActionBlocked = computed(
+  () => actionsDisabled.value || !isAdminWallet.value
+);
+const conversionReady = computed(
+  () =>
+    Boolean(forms.convertAssetMint.trim()) &&
+    Boolean(forms.convertRoutePool.trim()) &&
+    Boolean(forms.convertAmount.trim()) &&
+    Boolean(forms.convertMinReserveOut.trim())
 );
 const transactionScopeOptions: Array<{
   value: TransactionFeedScope;
@@ -782,6 +1307,21 @@ const addressRows = computed(() => {
     ["Pending MANA", treasury.pendingManaVault],
   ].map(([label, address]) => ({ label, address }));
 });
+
+watch(
+  [config, snapshot],
+  () => {
+    if (!forms.adminRouter && config.value.cpSwapProgram) {
+      forms.adminRouter = config.value.cpSwapProgram;
+    }
+    if (!forms.adminCooldown && snapshot.value) {
+      forms.adminCooldown = String(
+        snapshot.value.treasuryState.cooldownSeconds
+      );
+    }
+  },
+  { immediate: true }
+);
 
 watch(
   [cluster, wallet.publicKey],
@@ -834,6 +1374,8 @@ function selectCluster(next: ClusterName) {
   cluster.value = next;
   confirmation.value = null;
   lastSignature.value = "";
+  adminPool.value = null;
+  adminPoolError.value = "";
   syncUrlCluster(next);
 }
 
@@ -867,8 +1409,49 @@ async function refreshTransactions() {
   }
 }
 
+async function inspectAdminPool() {
+  if (!isDeployedConfig(config.value)) return;
+  adminPoolError.value = "";
+  adminPool.value = null;
+  adminPoolLoading.value = true;
+  try {
+    adminPool.value = await loadCpSwapPoolSnapshot(
+      connection.value,
+      config.value,
+      forms.adminPool.trim()
+    );
+  } catch (error) {
+    adminPoolError.value = errorMessage(error);
+  } finally {
+    adminPoolLoading.value = false;
+  }
+}
+
+async function refreshAdminPoolIfReady() {
+  if (!forms.adminPool.trim() || !isDeployedConfig(config.value)) return;
+  try {
+    adminPool.value = await loadCpSwapPoolSnapshot(
+      connection.value,
+      config.value,
+      forms.adminPool.trim()
+    );
+    adminPoolError.value = "";
+  } catch (error) {
+    adminPoolError.value = errorMessage(error);
+  }
+}
+
 async function prepareAction(kind: ActionKind) {
-  if (!isDeployedConfig(config.value) || !wallet.publicKey.value || !snapshot.value) {
+  if (isAdminAction(kind)) {
+    await prepareAdminAction(kind);
+    return;
+  }
+
+  if (
+    !isDeployedConfig(config.value) ||
+    !wallet.publicKey.value ||
+    !snapshot.value
+  ) {
     return;
   }
 
@@ -914,7 +1497,9 @@ async function prepareAction(kind: ActionKind) {
       const amount = parseUiAmount(forms.destake, manaDecimals.value);
       assertManaSourceReady(amount);
       if (hasOpenRedemption.value) {
-        throw new Error("Finalize the current destake before starting another one.");
+        throw new Error(
+          "Finalize the current destake before starting another one."
+        );
       }
       const preview = createDestakePreview(
         amount,
@@ -944,7 +1529,10 @@ async function prepareAction(kind: ActionKind) {
       );
       rows = redemption.value
         ? [
-            { label: "Receive", value: formatReserve(redemption.value.reservedReserveAmount) },
+            {
+              label: "Receive",
+              value: formatReserve(redemption.value.reservedReserveAmount),
+            },
             { label: "Burn", value: formatMana(redemption.value.manaAmount) },
           ]
         : [];
@@ -962,6 +1550,138 @@ async function prepareAction(kind: ActionKind) {
       rows: [
         { label: "Cluster", value: config.value.label },
         { label: "Wallet", value: owner.toString() },
+        ...rows,
+      ],
+      transaction: prepared.transaction,
+      simulation: prepared.result,
+    };
+  } catch (error) {
+    loadError.value = errorMessage(error);
+  } finally {
+    busyAction.value = null;
+  }
+}
+
+async function prepareAdminAction(
+  kind: AdminActionKind,
+  side?: CpSwapPoolSideSnapshot
+) {
+  if (
+    !isDeployedConfig(config.value) ||
+    !wallet.publicKey.value ||
+    !snapshot.value ||
+    !isAdminWallet.value
+  ) {
+    return;
+  }
+
+  busyAction.value = kind;
+  loadError.value = "";
+  confirmation.value = null;
+  try {
+    let transaction: Transaction;
+    let rows: Confirmation["rows"];
+    const authority = wallet.publicKey.value;
+
+    if (kind === "setRouter") {
+      const router = new PublicKey(
+        forms.adminRouter.trim() || config.value.cpSwapProgram || ""
+      );
+      transaction = await buildSetSwapRouterTransaction(
+        connection.value,
+        config.value,
+        authority,
+        router
+      );
+      rows = [
+        { label: "Router", value: router.toString() },
+        { label: "Current", value: snapshot.value.treasuryState.swapRouter },
+      ];
+    } else if (kind === "setCooldown") {
+      const cooldown = parseWholeUnits(forms.adminCooldown, "Cooldown");
+      transaction = await buildSetCooldownSecondsTransaction(
+        connection.value,
+        config.value,
+        authority,
+        cooldown
+      );
+      rows = [
+        { label: "Cooldown", value: `${cooldown.toString()}s` },
+        {
+          label: "Current",
+          value: `${snapshot.value.treasuryState.cooldownSeconds}s`,
+        },
+      ];
+    } else if (kind === "createAssetVault") {
+      if (!side || !side.assetVault) {
+        throw new Error("Select a non-reserve pool token first.");
+      }
+      transaction = await buildCreateAssetVaultTransaction(
+        connection.value,
+        config.value,
+        authority,
+        new PublicKey(side.mint),
+        new PublicKey(side.tokenProgram)
+      );
+      rows = [
+        { label: "Asset mint", value: side.mint },
+        { label: "Asset vault", value: side.assetVault.assetTokenAccount },
+      ];
+    } else if (kind === "sweepProtocol" || kind === "sweepFund") {
+      if (!adminPool.value) {
+        throw new Error("Inspect a pool before sweeping fees.");
+      }
+      const feeKind = kind === "sweepProtocol" ? "protocol" : "fund";
+      transaction = await buildCollectCpSwapFeesTransaction(
+        connection.value,
+        config.value,
+        adminPool.value.address,
+        feeKind
+      );
+      rows = adminPool.value.sides.map((poolSide) => ({
+        label: `Token ${poolSide.index}`,
+        value:
+          feeKind === "protocol"
+            ? formatPoolAmount(poolSide.protocolFees, poolSide.decimals)
+            : formatPoolAmount(poolSide.fundFees, poolSide.decimals),
+      }));
+    } else {
+      const assetMint = new PublicKey(forms.convertAssetMint.trim());
+      const amount = parseWholeUnits(forms.convertAmount, "Amount");
+      const minOut = parseWholeUnits(
+        forms.convertMinReserveOut,
+        `Minimum ${reserveSymbol.value}`
+      );
+      transaction = await buildSwapAssetToMimViaCpSwapTransaction(
+        connection.value,
+        config.value,
+        authority,
+        assetMint,
+        forms.convertRoutePool.trim(),
+        amount,
+        minOut
+      );
+      rows = [
+        { label: "Asset mint", value: assetMint.toString() },
+        { label: "Route pool", value: forms.convertRoutePool.trim() },
+        { label: "Amount", value: amount.toString() },
+        { label: `Min ${reserveSymbol.value}`, value: minOut.toString() },
+        { label: "Router", value: config.value.cpSwapProgram ?? "" },
+      ];
+    }
+
+    const prepared = await simulateTreasuryTransaction(
+      connection.value,
+      transaction,
+      authority
+    );
+    confirmation.value = {
+      kind,
+      title: actionTitle(kind),
+      clusterLabel: config.value.label,
+      rows: [
+        { label: "Cluster", value: config.value.label },
+        { label: "Wallet", value: authority.toString() },
         ...rows,
       ],
       transaction: prepared.transaction,
@@ -995,6 +1715,7 @@ async function sendConfirmed() {
     forms.donate = "";
     forms.destake = "";
     await refresh();
+    await refreshAdminPoolIfReady();
     await refreshTransactions();
   } catch (error) {
     loadError.value = errorMessage(error);
@@ -1020,6 +1741,50 @@ function baseActionIssue() {
     return "Loading wallet balances.";
   }
   return "";
+}
+
+function isAdminAction(kind: ActionKind): kind is AdminActionKind {
+  return (
+    kind === "setRouter" ||
+    kind === "setCooldown" ||
+    kind === "createAssetVault" ||
+    kind === "sweepProtocol" ||
+    kind === "sweepFund" ||
+    kind === "convertAsset"
+  );
+}
+
+function parseWholeUnits(input: string, label: string) {
+  const trimmed = input.trim();
+  if (!/^\d+$/.test(trimmed)) {
+    throw new Error(`${label} must be a whole number.`);
+  }
+  const amount = BigInt(trimmed);
+  if (amount <= 0n && label !== "Cooldown") {
+    throw new Error(`${label} must be greater than zero.`);
+  }
+  return amount;
+}
+
+function assetVaultReady(side: CpSwapPoolSideSnapshot) {
+  return Boolean(
+    side.assetVault?.assetVaultExists && side.assetVault.assetTokenAccountExists
+  );
+}
+
+function feeReceiverLabel(side: CpSwapPoolSideSnapshot) {
+  if (side.isReserveMint) return `Active ${reserveSymbol.value}`;
+  return assetVaultReady(side) ? "Asset vault" : "Vault missing";
+}
+
+function useSideForConversion(side: CpSwapPoolSideSnapshot) {
+  forms.convertAssetMint = side.mint;
+  if (forms.adminPool.trim()) {
+    forms.convertRoutePool = forms.adminPool.trim();
+  }
+  if (side.assetVault?.amount && side.assetVault.amount > 0n) {
+    forms.convertAmount = side.assetVault.amount.toString();
+  }
 }
 
 function parsedActionAmount(input: string, decimals: number) {
@@ -1088,8 +1853,16 @@ function previewText(kind: "deposit" | "destake", input: string) {
     if (amount <= 0n) return "";
     const preview =
       kind === "deposit"
-        ? createDepositPreview(amount, snapshot.value, config.value.defaultSlippageBps)
-        : createDestakePreview(amount, snapshot.value, config.value.defaultSlippageBps);
+        ? createDepositPreview(
+            amount,
+            snapshot.value,
+            config.value.defaultSlippageBps
+          )
+        : createDestakePreview(
+            amount,
+            snapshot.value,
+            config.value.defaultSlippageBps
+          );
     return `Est. ${
       kind === "deposit"
         ? formatMana(preview.estimatedOut)
@@ -1101,16 +1874,24 @@ function previewText(kind: "deposit" | "destake", input: string) {
 }
 
 function formatReserve(amount: bigint | undefined | null) {
-  return `${formatTokenAmount(amount ?? 0n, reserveDecimals.value)} ${reserveSymbol.value}`;
+  return `${formatTokenAmount(amount ?? 0n, reserveDecimals.value)} ${
+    reserveSymbol.value
+  }`;
 }
 
 function formatMana(amount: bigint | undefined | null) {
   return `${formatTokenAmount(amount ?? 0n, manaDecimals.value)} MANA`;
 }
 
+function formatPoolAmount(amount: bigint, decimals: number) {
+  return formatTokenAmount(amount, decimals);
+}
+
 function initialCluster(): ClusterName {
   if (typeof window === "undefined") return "devnet";
-  return parseClusterParam(new URLSearchParams(window.location.search).get("cluster"));
+  return parseClusterParam(
+    new URLSearchParams(window.location.search).get("cluster")
+  );
 }
 
 function syncUrlCluster(next: ClusterName) {
@@ -1147,7 +1928,13 @@ function actionTitle(kind: ActionKind) {
   if (kind === "deposit") return "Deposit";
   if (kind === "donate") return "Donate";
   if (kind === "destake") return "Start destake";
-  return "Finalize destake";
+  if (kind === "finalize") return "Finalize destake";
+  if (kind === "setRouter") return "Set swap router";
+  if (kind === "setCooldown") return "Set cooldown";
+  if (kind === "createAssetVault") return "Create asset vault";
+  if (kind === "sweepProtocol") return "Sweep protocol fees";
+  if (kind === "sweepFund") return "Sweep fund fees";
+  return `Convert to ${reserveSymbol.value}`;
 }
 
 function errorMessage(error: unknown) {
@@ -1177,7 +1964,10 @@ const MetricTile = defineComponent({
     label: { type: String, required: true },
     value: { type: String, required: true },
     subValue: { type: String, default: "" },
-    tone: { type: String as PropType<"reserve" | "mana" | "neutral">, default: "neutral" },
+    tone: {
+      type: String as PropType<"reserve" | "mana" | "neutral">,
+      default: "neutral",
+    },
     loading: { type: Boolean, default: false },
   },
   setup(props) {
@@ -1187,31 +1977,37 @@ const MetricTile = defineComponent({
         : props.subValue;
 
     return () =>
-      h("article", { class: "rounded-lg border border-black/10 bg-white p-4 shadow-sm" }, [
-        h("div", { class: "mb-3 flex items-center justify-between gap-3" }, [
-          h("p", { class: "text-sm font-bold text-black/55" }, props.label),
-          h("span", {
-            class: [
-              "size-3 rounded-full",
-              props.tone === "reserve"
-                ? "bg-mim"
-                : props.tone === "mana"
+      h(
+        "article",
+        { class: "rounded-lg border border-black/10 bg-white p-4 shadow-sm" },
+        [
+          h("div", { class: "mb-3 flex items-center justify-between gap-3" }, [
+            h("p", { class: "text-sm font-bold text-black/55" }, props.label),
+            h("span", {
+              class: [
+                "size-3 rounded-full",
+                props.tone === "reserve"
+                  ? "bg-mim"
+                  : props.tone === "mana"
                   ? "bg-mana"
                   : "bg-black/20",
-            ],
-          }),
-        ]),
-        h(
-          "p",
-          { class: "min-h-8 break-words text-2xl font-black tracking-normal" },
-          props.loading ? "..." : props.value
-        ),
-        h(
-          "p",
-          { class: "mt-2 truncate text-xs font-semibold text-black/45" },
-          props.subValue ? subValue() : "n/a"
-        ),
-      ]);
+              ],
+            }),
+          ]),
+          h(
+            "p",
+            {
+              class: "min-h-8 break-words text-2xl font-black tracking-normal",
+            },
+            props.loading ? "..." : props.value
+          ),
+          h(
+            "p",
+            { class: "mt-2 truncate text-xs font-semibold text-black/45" },
+            props.subValue ? subValue() : "n/a"
+          ),
+        ]
+      );
   },
 });
 
@@ -1224,22 +2020,45 @@ const VaultTile = defineComponent({
   },
   setup(props) {
     return () =>
-      h("article", { class: "rounded-lg border border-black/10 bg-field p-3" }, [
-        h("p", { class: "text-xs font-black uppercase tracking-normal text-black/45" }, props.label),
-        h("p", { class: "mt-2 min-h-7 break-words text-lg font-black" }, props.amount),
-        props.address
-          ? h(
-              "a",
-              {
-                class: "mt-3 inline-flex max-w-full items-center gap-1 text-xs font-black text-black/55 underline",
-                href: explorerUrl(props.config, props.address),
-                target: "_blank",
-                rel: "noreferrer",
-              },
-              [h("span", { class: "truncate" }, shortAddress(props.address)), h(ExternalLink, { class: "size-3" })]
-            )
-          : h("p", { class: "mt-3 text-xs font-semibold text-black/40" }, "n/a"),
-      ]);
+      h(
+        "article",
+        { class: "rounded-lg border border-black/10 bg-field p-3" },
+        [
+          h(
+            "p",
+            {
+              class:
+                "text-xs font-black uppercase tracking-normal text-black/45",
+            },
+            props.label
+          ),
+          h(
+            "p",
+            { class: "mt-2 min-h-7 break-words text-lg font-black" },
+            props.amount
+          ),
+          props.address
+            ? h(
+                "a",
+                {
+                  class:
+                    "mt-3 inline-flex max-w-full items-center gap-1 text-xs font-black text-black/55 underline",
+                  href: explorerUrl(props.config, props.address),
+                  target: "_blank",
+                  rel: "noreferrer",
+                },
+                [
+                  h("span", { class: "truncate" }, shortAddress(props.address)),
+                  h(ExternalLink, { class: "size-3" }),
+                ]
+              )
+            : h(
+                "p",
+                { class: "mt-3 text-xs font-semibold text-black/40" },
+                "n/a"
+              ),
+        ]
+      );
   },
 });
 
@@ -1263,30 +2082,46 @@ const BalanceTile = defineComponent({
     };
 
     return () =>
-      h("article", { class: "rounded-lg border border-black/10 bg-field p-3" }, [
-        h("div", { class: "flex items-center justify-between gap-3" }, [
-          h("p", { class: "text-sm font-black" }, props.symbol),
-          h("span", {
-            class: [
-              "size-3 rounded-full",
-              props.tone === "reserve" ? "bg-mim" : "bg-mana",
-            ],
-          }),
-        ]),
-        h("p", { class: "mt-2 min-h-8 break-words text-2xl font-black" }, props.amount),
-        props.address && props.exists
-          ? h(
-              "a",
-              {
-                class: "mt-2 inline-flex max-w-full items-center gap-1 text-xs font-black text-black/55 underline",
-                href: explorerUrl(props.config, props.address),
-                target: "_blank",
-                rel: "noreferrer",
-              },
-              [h("span", { class: "truncate" }, shortAddress(props.address)), h(ExternalLink, { class: "size-3" })]
-            )
-          : h("p", { class: "mt-2 text-xs font-semibold text-black/40" }, status()),
-      ]);
+      h(
+        "article",
+        { class: "rounded-lg border border-black/10 bg-field p-3" },
+        [
+          h("div", { class: "flex items-center justify-between gap-3" }, [
+            h("p", { class: "text-sm font-black" }, props.symbol),
+            h("span", {
+              class: [
+                "size-3 rounded-full",
+                props.tone === "reserve" ? "bg-mim" : "bg-mana",
+              ],
+            }),
+          ]),
+          h(
+            "p",
+            { class: "mt-2 min-h-8 break-words text-2xl font-black" },
+            props.amount
+          ),
+          props.address && props.exists
+            ? h(
+                "a",
+                {
+                  class:
+                    "mt-2 inline-flex max-w-full items-center gap-1 text-xs font-black text-black/55 underline",
+                  href: explorerUrl(props.config, props.address),
+                  target: "_blank",
+                  rel: "noreferrer",
+                },
+                [
+                  h("span", { class: "truncate" }, shortAddress(props.address)),
+                  h(ExternalLink, { class: "size-3" }),
+                ]
+              )
+            : h(
+                "p",
+                { class: "mt-2 text-xs font-semibold text-black/40" },
+                status()
+              ),
+        ]
+      );
   },
 });
 
@@ -1305,48 +2140,75 @@ const ActionPanel = defineComponent({
   },
   setup(props, { emit }) {
     return () =>
-      h("section", { class: "rounded-lg border border-black/10 bg-white p-4 shadow-sm" }, [
-        h("div", { class: "mb-3 flex items-center justify-between gap-3" }, [
-          h("div", { class: "flex items-center gap-2" }, [
-            h(props.icon, { class: "size-5 text-ink" }),
-            h("h2", { class: "text-lg font-black" }, props.title),
+      h(
+        "section",
+        { class: "rounded-lg border border-black/10 bg-white p-4 shadow-sm" },
+        [
+          h("div", { class: "mb-3 flex items-center justify-between gap-3" }, [
+            h("div", { class: "flex items-center gap-2" }, [
+              h(props.icon, { class: "size-5 text-ink" }),
+              h("h2", { class: "text-lg font-black" }, props.title),
+            ]),
+            props.preview
+              ? h(
+                  "span",
+                  {
+                    class:
+                      "rounded-md bg-emerald-50 px-2 py-1 text-xs font-black text-emerald-700",
+                  },
+                  props.preview
+                )
+              : null,
           ]),
-          props.preview
-            ? h("span", { class: "rounded-md bg-emerald-50 px-2 py-1 text-xs font-black text-emerald-700" }, props.preview)
+          h("label", { class: "grid gap-2" }, [
+            h(
+              "span",
+              {
+                class:
+                  "text-xs font-black uppercase tracking-normal text-black/45",
+              },
+              props.inputLabel
+            ),
+            h("input", {
+              class:
+                "h-11 w-full rounded-lg border border-black/10 bg-field px-3 text-base font-black outline-none transition focus:border-ink",
+              inputmode: "decimal",
+              placeholder: "0.00",
+              value: props.inputValue,
+              disabled: props.busy,
+              onInput: (event: Event) =>
+                emit(
+                  "update:inputValue",
+                  (event.target as HTMLInputElement).value
+                ),
+            }),
+          ]),
+          h(
+            "button",
+            {
+              type: "button",
+              class:
+                "mt-4 flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-ink px-4 text-sm font-black text-white transition hover:bg-black disabled:cursor-not-allowed disabled:bg-black/20",
+              disabled:
+                props.disabled || props.busy || !props.inputValue.trim(),
+              onClick: () => emit("submit"),
+            },
+            [
+              props.busy
+                ? h(Loader2, { class: "size-4 animate-spin" })
+                : h(Send, { class: "size-4" }),
+              props.buttonLabel,
+            ]
+          ),
+          props.message
+            ? h(
+                "p",
+                { class: "mt-3 text-sm font-semibold text-black/55" },
+                props.message
+              )
             : null,
-        ]),
-        h("label", { class: "grid gap-2" }, [
-          h("span", { class: "text-xs font-black uppercase tracking-normal text-black/45" }, props.inputLabel),
-          h("input", {
-            class: "h-11 w-full rounded-lg border border-black/10 bg-field px-3 text-base font-black outline-none transition focus:border-ink",
-            inputmode: "decimal",
-            placeholder: "0.00",
-            value: props.inputValue,
-            disabled: props.busy,
-            onInput: (event: Event) =>
-              emit("update:inputValue", (event.target as HTMLInputElement).value),
-          }),
-        ]),
-        h(
-          "button",
-          {
-            type: "button",
-            class:
-              "mt-4 flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-ink px-4 text-sm font-black text-white transition hover:bg-black disabled:cursor-not-allowed disabled:bg-black/20",
-            disabled: props.disabled || props.busy || !props.inputValue.trim(),
-            onClick: () => emit("submit"),
-          },
-          [
-            props.busy
-              ? h(Loader2, { class: "size-4 animate-spin" })
-              : h(Send, { class: "size-4" }),
-            props.buttonLabel,
-          ]
-        ),
-        props.message
-          ? h("p", { class: "mt-3 text-sm font-semibold text-black/55" }, props.message)
-          : null,
-      ]);
+        ]
+      );
   },
 });
 </script>

@@ -1,5 +1,7 @@
 import { Program, BN } from "@coral-xyz/anchor";
 import { RaydiumCpSwap } from "../../target/types/raydium_cp_swap";
+import * as fs from "fs";
+import * as path from "path";
 import {
   Connection,
   ConfirmOptions,
@@ -11,8 +13,11 @@ import {
   ComputeBudgetProgram,
 } from "@solana/web3.js";
 import {
+  NATIVE_MINT,
   TOKEN_PROGRAM_ID,
   TOKEN_2022_PROGRAM_ID,
+  createAccount,
+  getAccount,
   getAssociatedTokenAddressSync,
 } from "@solana/spl-token";
 import {
@@ -28,6 +33,10 @@ import {
 } from "./index";
 
 import { ASSOCIATED_PROGRAM_ID } from "@coral-xyz/anchor/dist/cjs/utils/token";
+
+const DEFAULT_CREATE_POOL_FEE_RECEIVER = new PublicKey(
+  "9xBAJLDnp9PyGUtr1RNzJbQhYt3CXSD6FvCxYFa9VZWG"
+);
 
 export async function setupInitializeTest(
   program: Program<RaydiumCpSwap>,
@@ -300,8 +309,17 @@ export async function initialize(
     initAmount0: new BN(10000000000),
     initAmount1: new BN(20000000000),
   },
-  createPoolFee = new PublicKey("DNXgeM9EiiaAbaWvwjHj9fQQLAX5ZsfHyvmYUNRAdNC8")
+  createPoolFee = DEFAULT_CREATE_POOL_FEE_RECEIVER,
+  // Pool-level base swap fee rate (10^-6 units). 20% goes to protocol, 80% to LPs.
+  // Default 0.25% (2_500). Max allowed by program: 5% (50_000).
+  poolTradeFeeRate: BN = new BN(2500)
 ) {
+  await ensureCreatePoolFeeReceiver(
+    program.provider.connection,
+    creator,
+    createPoolFee
+  );
+
   const [auth] = await getAuthAddress(program.programId);
   const [poolAddress] = await getPoolAddress(
     configAddress,
@@ -350,7 +368,12 @@ export async function initialize(
     token1Program
   );
   await program.methods
-    .initialize(initAmount.initAmount0, initAmount.initAmount1, new BN(0))
+    .initialize(
+      initAmount.initAmount0,
+      initAmount.initAmount1,
+      new BN(0),
+      poolTradeFeeRate
+    )
     .accounts({
       creator: creator.publicKey,
       ammConfig: configAddress,
@@ -375,6 +398,47 @@ export async function initialize(
     .rpc(confirmOptions);
   const poolState = await program.account.poolState.fetch(poolAddress);
   return { poolAddress, poolState };
+}
+
+async function ensureCreatePoolFeeReceiver(
+  connection: Connection,
+  payer: Signer,
+  createPoolFee: PublicKey
+) {
+  if (!createPoolFee.equals(DEFAULT_CREATE_POOL_FEE_RECEIVER)) {
+    return;
+  }
+  try {
+    await getAccount(connection, createPoolFee, "processed", TOKEN_PROGRAM_ID);
+    return;
+  } catch (_error) {
+    const receiver = readCreatePoolFeeReceiverKeypair();
+    await createAccount(
+      connection,
+      payer,
+      NATIVE_MINT,
+      payer.publicKey,
+      receiver,
+      undefined,
+      TOKEN_PROGRAM_ID
+    );
+  }
+}
+
+function readCreatePoolFeeReceiverKeypair() {
+  return Keypair.fromSecretKey(
+    Uint8Array.from(
+      JSON.parse(
+        fs.readFileSync(
+          path.join(
+            process.cwd(),
+            "target/deploy/create_pool_fee_receiver-keypair.json"
+          ),
+          "utf8"
+        )
+      )
+    )
+  );
 }
 
 export async function deposit(

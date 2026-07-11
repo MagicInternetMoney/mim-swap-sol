@@ -180,4 +180,101 @@ describe("initialize test", () => {
       assert(new BN(total.toString()).gte(initAmount1));
     }
   });
+
+  it("rejects zero pool fee and accepts max 5% pool fee", async () => {
+    const { configAddress, token0, token0Program, token1, token1Program } =
+      await setupInitializeTest(
+        program,
+        anchor.getProvider().connection,
+        owner,
+        {
+          config_index: 0,
+          tradeFeeRate: new BN(10),
+          protocolFeeRate: new BN(200000),
+          fundFeeRate: new BN(0),
+          create_fee: new BN(0),
+        },
+        { transferFeeBasisPoints: 0, MaxFee: 0 },
+        confirmOptions
+      );
+
+    const initAmount0 = new BN(10000000000);
+    const initAmount1 = new BN(10000000000);
+    await expectTransactionFailure(async () => {
+      await initialize(
+        program,
+        owner,
+        configAddress,
+        token0,
+        token0Program,
+        token1,
+        token1Program,
+        confirmOptions,
+        { initAmount0, initAmount1 },
+        undefined,
+        new BN(0)
+      );
+    });
+
+    const { poolState } = await initialize(
+      program,
+      owner,
+      configAddress,
+      token0,
+      token0Program,
+      token1,
+      token1Program,
+      confirmOptions,
+      { initAmount0, initAmount1 },
+      undefined,
+      new BN(50000)
+    );
+    assert.equal(poolState.poolTradeFeeRate.toString(), "50000");
+  });
+
+  it("rejects pool fee above 5%", async () => {
+    const { configAddress, token0, token0Program, token1, token1Program } =
+      await setupInitializeTest(
+        program,
+        anchor.getProvider().connection,
+        owner,
+        {
+          config_index: 0,
+          tradeFeeRate: new BN(10),
+          protocolFeeRate: new BN(200000),
+          fundFeeRate: new BN(0),
+          create_fee: new BN(0),
+        },
+        { transferFeeBasisPoints: 0, MaxFee: 0 },
+        confirmOptions
+      );
+
+    await expectTransactionFailure(async () => {
+      await initialize(
+        program,
+        owner,
+        configAddress,
+        token0,
+        token0Program,
+        token1,
+        token1Program,
+        confirmOptions,
+        {
+          initAmount0: new BN(10000000000),
+          initAmount1: new BN(10000000000),
+        },
+        undefined,
+        new BN(50001)
+      );
+    });
+  });
 });
+
+async function expectTransactionFailure(action: () => Promise<unknown>) {
+  try {
+    await action();
+    assert.fail("transaction should have failed");
+  } catch (_error) {
+    assert.ok(true);
+  }
+}

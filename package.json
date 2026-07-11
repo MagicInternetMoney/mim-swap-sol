@@ -1,7 +1,15 @@
 {
     "scripts": {
         "keys:setup": "bash scripts/setup-owned-keys.sh",
+        "devnet:setup-cp-swap": "node scripts/setup-devnet-cp-swap.js",
+        "devnet:smoke-cp-swap": "node scripts/smoke-devnet-cp-swap.js",
         "devnet:setup-treasury": "node scripts/setup-devnet-treasury.js",
+        "devnet:fee-keeper": "node scripts/cp-swap-fee-keeper.js",
+        "dex:dev": "npm --prefix apps/dex run dev",
+        "dex:build": "npm --prefix apps/dex run build",
+        "dex:check": "npm --prefix apps/dex run check",
+        "dex:test": "npm --prefix apps/dex run test",
+        "dex:sync-idl": "npm --prefix apps/dex run sync:idl",
         "treasury:dev": "npm --prefix apps/treasury run dev",
         "treasury:build": "npm --prefix apps/treasury run build",
         "treasury:check": "npm --prefix apps/treasury run check",

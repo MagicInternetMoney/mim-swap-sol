@@ -7,7 +7,12 @@ import {
   parseClusterParam,
   SOLANA_CONFIG,
 } from "./solana.config";
-import { deriveMetadataPda, deriveTreasuryPdas } from "./pdas";
+import {
+  deriveAssetVaultPdas,
+  deriveCpSwapAuthority,
+  deriveMetadataPda,
+  deriveTreasuryPdas,
+} from "./pdas";
 
 describe("solana config", () => {
   it("falls back to devnet for missing or invalid query params", () => {
@@ -57,8 +62,10 @@ describe("solana config", () => {
 
     const metadataProgram = new PublicKey(devnet.tokenPrograms.tokenMetadata);
     expect(
-      deriveMetadataPda(metadataProgram, new PublicKey(devnet.treasury.manaMint))
-        .toString()
+      deriveMetadataPda(
+        metadataProgram,
+        new PublicKey(devnet.treasury.manaMint)
+      ).toString()
     ).toBe(devnet.treasury.manaMetadata);
     expect(
       deriveMetadataPda(
@@ -66,5 +73,39 @@ describe("solana config", () => {
         new PublicKey(devnet.treasury.reserveMint)
       ).toString()
     ).toBe(devnet.treasury.reserveMetadata);
+  });
+
+  it("derives treasury asset vaults for arbitrary fee mints", () => {
+    const devnet = SOLANA_CONFIG.devnet;
+    if (!isDeployedConfig(devnet)) {
+      throw new Error("devnet must be deployed");
+    }
+
+    const feeMint = new PublicKey(
+      "So11111111111111111111111111111111111111112"
+    );
+    const vaults = deriveAssetVaultPdas(
+      new PublicKey(devnet.treasury.manaTreasuryProgram),
+      new PublicKey(devnet.treasury.treasuryState),
+      feeMint
+    );
+
+    expect(vaults.assetVault.toString()).not.toBe(
+      devnet.treasury.activeReserveVault
+    );
+    expect(vaults.assetTokenAccount.toString()).not.toBe(
+      devnet.treasury.activeReserveVault
+    );
+  });
+
+  it("derives the configured CP-swap pool authority", () => {
+    const devnet = SOLANA_CONFIG.devnet;
+    if (!devnet.cpSwapProgram) {
+      throw new Error("devnet CP-swap program must be configured");
+    }
+
+    expect(
+      deriveCpSwapAuthority(new PublicKey(devnet.cpSwapProgram)).toString()
+    ).toMatch(/^[1-9A-HJ-NP-Za-km-z]{32,44}$/);
   });
 });

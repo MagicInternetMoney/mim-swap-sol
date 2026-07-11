@@ -1,5 +1,5 @@
 {
-  "name": "@mim-swap/treasury",
+  "name": "@mim-swap/dex",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -9,7 +9,7 @@
     "preview": "astro preview --host 127.0.0.1",
     "check": "astro check && tsc --noEmit -p tsconfig.test.json",
     "test": "vitest run",
-    "sync:idl": "cp ../../target/idl/mana_treasury.json src/idl/mana_treasury.json && cp ../../target/types/mana_treasury.ts src/idl/mana_treasury.ts && cp ../../target/idl/raydium_cp_swap.json src/idl/raydium_cp_swap.json && cp ../../target/types/raydium_cp_swap.ts src/idl/raydium_cp_swap.ts"
+    "sync:idl": "cp ../../target/idl/raydium_cp_swap.json src/idl/raydium_cp_swap.json && cp ../../target/types/raydium_cp_swap.ts src/idl/raydium_cp_swap.ts"
   },
   "dependencies": {
     "@astrojs/vue": "^5.0.0",

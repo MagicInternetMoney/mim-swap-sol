@@ -26,6 +26,7 @@ export type BaseClusterConfig = {
   explorerCluster: "devnet" | "mainnet-beta";
   deployed: boolean;
   defaultSlippageBps: number;
+  cpSwapProgram: PublicAddress | null;
   tokenPrograms: {
     splToken: PublicAddress;
     associatedToken: PublicAddress;
@@ -67,6 +68,7 @@ export const SOLANA_CONFIG = {
     explorerCluster: "devnet",
     deployed: true,
     defaultSlippageBps: 100,
+    cpSwapProgram: "HBcK8eBUSWW3YGgrWv1aUpsMF6GtgkjwkcoBiHMw8gxY",
     tokenPrograms: TOKEN_PROGRAMS,
     treasury: {
       admin: "G5mgpU51BzRyG5u294aVnecaxhW121iig4Eg3wXPAVda",
@@ -92,12 +94,15 @@ export const SOLANA_CONFIG = {
     explorerCluster: "mainnet-beta",
     deployed: false,
     defaultSlippageBps: 100,
+    cpSwapProgram: null,
     tokenPrograms: TOKEN_PROGRAMS,
     treasury: null,
   },
 } as const satisfies Record<ClusterName, ClusterConfig>;
 
-export function parseClusterParam(value: string | null | undefined): ClusterName {
+export function parseClusterParam(
+  value: string | null | undefined
+): ClusterName {
   return value === "mainnet" || value === "devnet" ? value : DEFAULT_CLUSTER;
 }
 

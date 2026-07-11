@@ -43,13 +43,14 @@ pub fn swap_base_output(
         .checked_mul(u128::from(total_output_token_amount))
         .unwrap();
 
-    let creator_fee_rate =
-        pool_state.adjust_creator_fee_rate(ctx.accounts.amm_config.creator_fee_rate);
+    // Use the pool-specific base fee rate set at pool creation (immutable).
+    // Creator fees are disabled for v1 permissionless pools.
+    let creator_fee_rate = 0u64;
     let result = CurveCalculator::swap_base_output(
         u128::from(amount_out_with_transfer_fee),
         u128::from(total_input_token_amount),
         u128::from(total_output_token_amount),
-        ctx.accounts.amm_config.trade_fee_rate,
+        pool_state.pool_trade_fee_rate,
         creator_fee_rate,
         ctx.accounts.amm_config.protocol_fee_rate,
         ctx.accounts.amm_config.fund_fee_rate,

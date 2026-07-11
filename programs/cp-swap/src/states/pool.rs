@@ -124,8 +124,12 @@ pub struct PoolState {
     pub padding1: [u8; 6],
     pub creator_fees_token_0: u64,
     pub creator_fees_token_1: u64,
+    /// Pool-specific base swap fee rate (in hundredths of a bip, i.e. 10^-6).
+    /// Set once at pool creation; immutable afterward. Overrides amm_config.trade_fee_rate
+    /// for this pool. Protocol share (20%) is applied on top via amm_config.protocol_fee_rate.
+    pub pool_trade_fee_rate: u64,
     /// padding for future updates
-    pub padding: [u64; 28],
+    pub padding: [u64; 27],
 }
 
 impl PoolState {
@@ -147,6 +151,7 @@ impl PoolState {
         observation_key: Pubkey,
         creator_fee_on: CreatorFeeOn,
         enable_creator_fee: bool,
+        pool_trade_fee_rate: u64,
     ) {
         self.amm_config = amm_config.key();
         self.pool_creator = pool_creator.key();
@@ -174,7 +179,8 @@ impl PoolState {
         self.padding1 = [0u8; 6];
         self.creator_fees_token_0 = 0;
         self.creator_fees_token_1 = 0;
-        self.padding = [0u64; 28];
+        self.pool_trade_fee_rate = pool_trade_fee_rate;
+        self.padding = [0u64; 27];
     }
 
     pub fn set_status(&mut self, status: u8) {

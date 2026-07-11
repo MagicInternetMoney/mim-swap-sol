@@ -183,14 +183,23 @@ pub mod raydium_cp_swap {
     /// * `init_amount_0` - the initial amount_0 to deposit
     /// * `init_amount_1` - the initial amount_1 to deposit
     /// * `open_time` - the timestamp allowed for swap
+    /// * `pool_trade_fee_rate` - Base swap fee chosen by the LP at creation (10^-6 units, max 50_000 = 5%).
+    ///   20% of this fee goes to the protocol treasury; 80% stays for LPs. Immutable after creation.
     ///
     pub fn initialize(
         ctx: Context<Initialize>,
         init_amount_0: u64,
         init_amount_1: u64,
         open_time: u64,
+        pool_trade_fee_rate: u64,
     ) -> Result<()> {
-        instructions::initialize(ctx, init_amount_0, init_amount_1, open_time)
+        instructions::initialize(
+            ctx,
+            init_amount_0,
+            init_amount_1,
+            open_time,
+            pool_trade_fee_rate,
+        )
     }
 
     /// Create a pool with permission

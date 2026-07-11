@@ -184,7 +184,15 @@ pub fn initialize(
     init_amount_0: u64,
     init_amount_1: u64,
     mut open_time: u64,
+    pool_trade_fee_rate: u64,
 ) -> Result<()> {
+    // Validate creator-chosen pool fee rate:
+    // must be in (0, 1_000_000) exclusive, and must leave room for the protocol split.
+    // We enforce max 5% (50_000 in 10^-6 units).
+    require!(
+        pool_trade_fee_rate > 0 && pool_trade_fee_rate <= 50_000,
+        ErrorCode::InvalidInput
+    );
     let mint0_associated_is_initialized = support_mint_associated_is_initialized(
         &ctx.remaining_accounts,
         &ctx.accounts.token_0_mint,
@@ -356,6 +364,7 @@ pub fn initialize(
         ctx.accounts.observation_state.key(),
         CreatorFeeOn::BothToken,
         false,
+        pool_trade_fee_rate,
     );
 
     Ok(())
