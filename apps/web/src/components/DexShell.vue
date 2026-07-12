@@ -597,6 +597,7 @@ import {
   isDeployedConfig,
   shortAddress,
   type ClusterName,
+  type RpcOverrideMap,
 } from "../lib/config";
 import {
   assertDexDeployed,
@@ -643,6 +644,7 @@ const props = withDefaults(
     embedded?: boolean;
     compact?: boolean;
     clusterName?: ClusterName;
+    rpcOverrides?: RpcOverrideMap;
     forcedTab?: Tab;
     liquidityPanel?: "all" | "create" | "manage";
   }>(),
@@ -691,7 +693,9 @@ const tabs = [
   { value: "portfolio" as const, label: "Portfolio", icon: WalletCards },
 ];
 
-const config = computed(() => getClusterConfig(cluster.value));
+const config = computed(() =>
+  getClusterConfig(cluster.value, props.rpcOverrides)
+);
 const connection = computed(() => createConnection(config.value));
 const isDeployed = computed(() => isDeployedConfig(config.value));
 const walletConnected = computed(

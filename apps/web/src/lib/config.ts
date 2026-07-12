@@ -66,6 +66,11 @@ export type UndeployedClusterConfig = BaseClusterConfig & {
 };
 
 export type ClusterConfig = DeployedClusterConfig | UndeployedClusterConfig;
+export type RpcOverride = {
+  rpcUrl?: string;
+  wsUrl?: string;
+};
+export type RpcOverrideMap = Partial<Record<ClusterName, RpcOverride>>;
 
 export type DexTokenConfig = TokenConfig;
 export type DexTreasuryConfig = TreasuryAddresses;
@@ -156,8 +161,35 @@ export function parseClusterParam(
   return value === "mainnet" || value === "devnet" ? value : DEFAULT_CLUSTER;
 }
 
-export function getClusterConfig(cluster: ClusterName): ClusterConfig {
-  return SOLANA_CONFIG[cluster];
+export function getClusterConfig(
+  cluster: ClusterName,
+  rpcOverrides?: RpcOverrideMap
+): ClusterConfig {
+  const config = SOLANA_CONFIG[cluster];
+  const override = rpcOverrides?.[cluster];
+  const rpcUrl = override?.rpcUrl?.trim();
+  const wsUrl = override?.wsUrl?.trim();
+
+  if (!rpcUrl && !wsUrl) {
+    return config;
+  }
+
+  return {
+    ...config,
+    rpcUrl: rpcUrl || config.rpcUrl,
+    wsUrl: wsUrl || (rpcUrl ? inferWebSocketUrl(rpcUrl) : config.wsUrl),
+  } as ClusterConfig;
+}
+
+export function inferWebSocketUrl(rpcUrl: string): string {
+  try {
+    const url = new URL(rpcUrl);
+    if (url.protocol === "https:") url.protocol = "wss:";
+    if (url.protocol === "http:") url.protocol = "ws:";
+    return url.toString();
+  } catch {
+    return rpcUrl;
+  }
 }
 
 export function isDeployedConfig(

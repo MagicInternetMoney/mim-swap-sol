@@ -1,6 +1,9 @@
 <template>
-  <main class="mim-shell relative isolate overflow-x-hidden">
-    <ParticleField />
+  <main
+    class="mim-shell relative isolate overflow-x-hidden"
+    :class="theme === 'light' ? 'mim-theme-light' : 'mim-theme-dark'"
+  >
+    <ParticleField :theme="theme" />
 
     <header class="mim-topbar">
       <div
@@ -34,35 +37,28 @@
         <div class="flex items-center gap-3">
           <button
             type="button"
-            class="hidden size-10 place-items-center rounded-lg text-slate-300 transition hover:bg-white/5 sm:grid"
-            title="Treasury"
-            @click="navigate('/treasury')"
+            class="grid size-10 place-items-center rounded-lg text-slate-300 transition hover:bg-white/5"
+            :class="
+              theme === 'light'
+                ? 'bg-cyan-ray/15 text-cyan-ray shadow-[0_0_26px_rgba(25,247,255,0.24)]'
+                : 'text-slate-300 hover:bg-white/5'
+            "
+            :title="
+              theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'
+            "
+            :aria-label="
+              theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'
+            "
+            @click="toggleTheme"
           >
             <Zap class="size-5" aria-hidden="true" />
           </button>
-          <div
-            class="hidden grid-cols-2 rounded-lg border border-white/10 bg-white/5 p-1 lg:grid"
-          >
-            <button
-              v-for="option in clusterOptions"
-              :key="option"
-              type="button"
-              class="rounded-md px-3 py-2 text-sm font-black transition"
-              :class="
-                cluster === option
-                  ? 'bg-cyan-ray text-slate-950'
-                  : 'text-slate-400 hover:bg-white/10'
-              "
-              @click="selectCluster(option)"
-            >
-              {{ getClusterConfig(option).label }}
-            </button>
-          </div>
           <button
             type="button"
-            class="hidden size-10 place-items-center rounded-lg text-slate-300 transition hover:bg-white/5 sm:grid"
-            title="Admin"
-            @click="navigate('/treasury/admin')"
+            class="grid size-10 place-items-center rounded-lg text-slate-300 transition hover:bg-white/5"
+            title="Settings"
+            aria-label="Open settings"
+            @click="openSettings"
           >
             <Settings class="size-5" aria-hidden="true" />
           </button>
@@ -109,6 +105,7 @@
           compact
           :wallet-error-message="walletErrorMessage"
           :cluster-name="cluster"
+          :rpc-overrides="rpcOverrides"
           forced-tab="swap"
         />
       </section>
@@ -126,6 +123,7 @@
           compact
           :wallet-error-message="walletErrorMessage"
           :cluster-name="cluster"
+          :rpc-overrides="rpcOverrides"
           forced-tab="pools"
         />
       </section>
@@ -153,6 +151,7 @@
               liquidity-panel="create"
               :wallet-error-message="walletErrorMessage"
               :cluster-name="cluster"
+              :rpc-overrides="rpcOverrides"
               forced-tab="liquidity"
             />
           </div>
@@ -177,6 +176,7 @@
             compact
             :wallet-error-message="walletErrorMessage"
             :cluster-name="cluster"
+            :rpc-overrides="rpcOverrides"
             forced-tab="swap"
           />
         </section>
@@ -186,6 +186,7 @@
           liquidity-panel="manage"
           :wallet-error-message="walletErrorMessage"
           :cluster-name="cluster"
+          :rpc-overrides="rpcOverrides"
           forced-tab="liquidity"
         />
       </section>
@@ -196,6 +197,7 @@
         compact
         :wallet-error-message="walletErrorMessage"
         :cluster-name="cluster"
+        :rpc-overrides="rpcOverrides"
         forced-tab="portfolio"
       />
 
@@ -205,6 +207,7 @@
           embedded
           :wallet-error-message="walletErrorMessage"
           :cluster-name="cluster"
+          :rpc-overrides="rpcOverrides"
           mode="treasury"
         />
       </section>
@@ -215,6 +218,7 @@
           embedded
           :wallet-error-message="walletErrorMessage"
           :cluster-name="cluster"
+          :rpc-overrides="rpcOverrides"
           mode="about"
         />
       </section>
@@ -225,10 +229,161 @@
           embedded
           :wallet-error-message="walletErrorMessage"
           :cluster-name="cluster"
+          :rpc-overrides="rpcOverrides"
           mode="feeOps"
         />
       </section>
     </section>
+
+    <div
+      v-if="settingsOpen"
+      class="fixed inset-0 z-50 grid place-items-center bg-slate-950/70 px-4 py-6 backdrop-blur-sm"
+      role="presentation"
+      @click.self="closeSettings"
+    >
+      <section
+        class="mim-card max-h-[calc(100vh-3rem)] w-full max-w-2xl overflow-auto p-5 sm:p-6"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="settings-title"
+      >
+        <header class="mb-6 flex items-start justify-between gap-4">
+          <div>
+            <h2 id="settings-title" class="text-2xl font-black text-slate-100">
+              Settings
+            </h2>
+            <p class="mt-2 text-sm font-semibold text-slate-500">
+              Connection settings used by swaps, pools, liquidity, and treasury.
+            </p>
+          </div>
+          <button
+            type="button"
+            class="grid size-10 shrink-0 place-items-center rounded-lg border border-white/10 text-slate-300 transition hover:bg-white/10"
+            title="Close settings"
+            @click="closeSettings"
+          >
+            <X class="size-5" aria-hidden="true" />
+          </button>
+        </header>
+
+        <div class="grid gap-5">
+          <section class="grid gap-3">
+            <div class="flex items-center justify-between gap-3">
+              <h3 class="mim-label">Network</h3>
+              <span class="mim-chip">
+                {{ activeConfig.deployed ? "Deployed" : "Not deployed" }}
+              </span>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <button
+                v-for="option in clusterOptions"
+                :key="option"
+                type="button"
+                class="rounded-lg border px-4 py-3 text-left transition"
+                :class="
+                  cluster === option
+                    ? 'border-cyan-ray bg-cyan-ray/12 text-cyan-ray'
+                    : 'border-white/10 bg-white/5 text-slate-400 hover:bg-white/10'
+                "
+                @click="selectCluster(option)"
+              >
+                <span class="block text-sm font-black">
+                  {{ getClusterConfig(option).label }}
+                </span>
+                <span class="mt-1 block text-xs font-bold text-slate-500">
+                  {{ getClusterConfig(option).deployed ? "Live config" : "Disabled until deployed" }}
+                </span>
+              </button>
+            </div>
+            <p class="text-sm font-semibold leading-6 text-slate-500">
+              Mainnet remains disabled for trading and treasury actions until
+              deployed addresses are added to config.
+            </p>
+          </section>
+
+          <section class="grid gap-4 border-t border-white/10 pt-5">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h3 class="mim-label">RPC Connection</h3>
+                <p class="mt-2 text-sm font-semibold text-slate-500">
+                  The app reads pools, quotes, balances, and treasury state from
+                  this endpoint.
+                </p>
+              </div>
+              <span class="mim-chip">
+                {{ hasRpcOverride ? "Custom" : "Default" }}
+              </span>
+            </div>
+
+            <div class="grid gap-2 rounded-lg border border-white/10 bg-night/45 p-3 text-sm">
+              <div class="flex justify-between gap-3">
+                <span class="font-black text-slate-500">HTTP</span>
+                <span class="min-w-0 truncate font-semibold text-slate-300">
+                  {{ activeConfig.rpcUrl }}
+                </span>
+              </div>
+              <div class="flex justify-between gap-3">
+                <span class="font-black text-slate-500">WS</span>
+                <span class="min-w-0 truncate font-semibold text-slate-300">
+                  {{ activeConfig.wsUrl }}
+                </span>
+              </div>
+            </div>
+
+            <label class="grid gap-2">
+              <span class="mim-label">HTTP RPC URL</span>
+              <input
+                v-model.trim="rpcDraft.rpcUrl"
+                class="mim-field h-12 w-full"
+                type="url"
+                inputmode="url"
+                :placeholder="baseConfig.rpcUrl"
+              />
+            </label>
+
+            <label class="grid gap-2">
+              <span class="mim-label">Websocket URL</span>
+              <input
+                v-model.trim="rpcDraft.wsUrl"
+                class="mim-field h-12 w-full"
+                type="url"
+                inputmode="url"
+                :placeholder="inferWebSocketUrl(rpcDraft.rpcUrl || baseConfig.rpcUrl)"
+              />
+              <span class="text-xs font-bold text-slate-500">
+                Optional. Leave blank to derive the websocket URL from the HTTP
+                endpoint.
+              </span>
+            </label>
+
+            <p
+              v-if="settingsError"
+              class="rounded-lg border border-red-300/30 bg-red-400/10 px-3 py-2 text-sm font-semibold text-red-100"
+            >
+              {{ settingsError }}
+            </p>
+
+            <div class="flex flex-col gap-2 sm:flex-row sm:justify-end">
+              <button
+                type="button"
+                class="mim-button-secondary h-11"
+                @click="resetRpcSettings"
+              >
+                <RotateCcw class="size-4" aria-hidden="true" />
+                Use default
+              </button>
+              <button
+                type="button"
+                class="mim-button-primary h-11"
+                @click="applyRpcSettings"
+              >
+                Apply RPC
+              </button>
+            </div>
+          </section>
+        </div>
+      </section>
+    </div>
   </main>
 </template>
 
@@ -239,9 +394,11 @@ import {
   Hexagon,
   Info,
   Landmark,
+  RotateCcw,
   Settings,
   SlidersHorizontal,
   Sparkles,
+  X,
   Zap,
 } from "lucide-vue-next";
 import {
@@ -250,14 +407,17 @@ import {
   h,
   onMounted,
   onUnmounted,
+  reactive,
   ref,
 } from "vue";
 import {
   CLUSTERS,
   DEFAULT_CLUSTER,
   getClusterConfig,
+  inferWebSocketUrl,
   parseClusterParam,
   type ClusterName,
+  type RpcOverrideMap,
 } from "../lib/config";
 import DexShell from "./DexShell.vue";
 import ParticleField from "./ParticleField.vue";
@@ -273,14 +433,25 @@ type RouteKind =
   | "treasury"
   | "treasuryAbout"
   | "treasuryAdmin";
+type AppTheme = "dark" | "light";
 
 const props = defineProps<{
   walletErrorMessage?: string;
 }>();
 
+const THEME_STORAGE_KEY = "mim-swap:theme";
+const RPC_STORAGE_KEY = "mim-swap:rpc-overrides";
 const clusterOptions = CLUSTERS;
 const cluster = ref<ClusterName>(initialCluster());
 const currentPath = ref(currentBrowserPath());
+const theme = ref<AppTheme>("dark");
+const settingsOpen = ref(false);
+const settingsError = ref("");
+const rpcOverrides = ref<RpcOverrideMap>({});
+const rpcDraft = reactive({
+  rpcUrl: "",
+  wsUrl: "",
+});
 
 const navItems = [
   { path: "/swap", label: "Swap" },
@@ -295,18 +466,91 @@ const mobileNavItems = [
 ];
 
 const routeKind = computed<RouteKind>(() => routeKindFor(currentPath.value));
+const activeConfig = computed(() =>
+  getClusterConfig(cluster.value, rpcOverrides.value)
+);
+const baseConfig = computed(() => getClusterConfig(cluster.value));
+const hasRpcOverride = computed(() => {
+  const override = rpcOverrides.value[cluster.value];
+  return Boolean(override?.rpcUrl || override?.wsUrl);
+});
 
 onMounted(() => {
+  loadStoredPreferences();
   window.addEventListener("popstate", handlePopState);
+  window.addEventListener("keydown", handleKeydown);
 });
 
 onUnmounted(() => {
   window.removeEventListener("popstate", handlePopState);
+  window.removeEventListener("keydown", handleKeydown);
 });
 
 function selectCluster(next: ClusterName) {
   cluster.value = next;
+  settingsError.value = "";
+  syncRpcDraft();
   syncUrlCluster(next);
+}
+
+function toggleTheme() {
+  setTheme(theme.value === "light" ? "dark" : "light");
+}
+
+function setTheme(next: AppTheme) {
+  theme.value = next;
+  applyDocumentTheme(next);
+  if (typeof window !== "undefined") {
+    window.localStorage.setItem(THEME_STORAGE_KEY, next);
+  }
+}
+
+function openSettings() {
+  settingsError.value = "";
+  syncRpcDraft();
+  settingsOpen.value = true;
+}
+
+function closeSettings() {
+  settingsOpen.value = false;
+}
+
+function applyRpcSettings() {
+  const rpcUrl = rpcDraft.rpcUrl.trim();
+  const wsUrl = rpcDraft.wsUrl.trim();
+
+  if (!isHttpEndpoint(rpcUrl)) {
+    settingsError.value = "Enter a valid HTTP or HTTPS RPC URL.";
+    return;
+  }
+  if (wsUrl && !isWebSocketEndpoint(wsUrl)) {
+    settingsError.value = "Enter a valid WS or WSS websocket URL.";
+    return;
+  }
+
+  const nextOverrides = { ...rpcOverrides.value };
+  if (rpcUrl === baseConfig.value.rpcUrl && (!wsUrl || wsUrl === baseConfig.value.wsUrl)) {
+    delete nextOverrides[cluster.value];
+  } else {
+    nextOverrides[cluster.value] = {
+      rpcUrl,
+      ...(wsUrl ? { wsUrl } : {}),
+    };
+  }
+
+  rpcOverrides.value = nextOverrides;
+  persistRpcOverrides();
+  settingsError.value = "";
+  syncRpcDraft();
+}
+
+function resetRpcSettings() {
+  const nextOverrides = { ...rpcOverrides.value };
+  delete nextOverrides[cluster.value];
+  rpcOverrides.value = nextOverrides;
+  persistRpcOverrides();
+  settingsError.value = "";
+  syncRpcDraft();
 }
 
 function navigate(path: string) {
@@ -331,6 +575,13 @@ function isActive(path: string) {
 function handlePopState() {
   currentPath.value = currentBrowserPath();
   cluster.value = initialCluster();
+  syncRpcDraft();
+}
+
+function handleKeydown(event: KeyboardEvent) {
+  if (event.key === "Escape") {
+    closeSettings();
+  }
 }
 
 function initialCluster(): ClusterName {
@@ -350,6 +601,84 @@ function syncUrlCluster(next: ClusterName) {
 function currentBrowserPath() {
   if (typeof window === "undefined") return "/";
   return window.location.pathname || "/";
+}
+
+function loadStoredPreferences() {
+  if (typeof window === "undefined") return;
+
+  const storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
+  if (storedTheme === "light" || storedTheme === "dark") {
+    theme.value = storedTheme;
+  }
+  applyDocumentTheme(theme.value);
+  rpcOverrides.value = readStoredRpcOverrides();
+  syncRpcDraft();
+}
+
+function applyDocumentTheme(next: AppTheme) {
+  if (typeof document === "undefined") return;
+
+  document.documentElement.classList.toggle(
+    "mim-theme-light-root",
+    next === "light"
+  );
+  document.documentElement.style.colorScheme = next;
+}
+
+function readStoredRpcOverrides(): RpcOverrideMap {
+  if (typeof window === "undefined") return {};
+
+  try {
+    const parsed = JSON.parse(
+      window.localStorage.getItem(RPC_STORAGE_KEY) ?? "{}"
+    ) as RpcOverrideMap;
+    return CLUSTERS.reduce<RpcOverrideMap>((accumulator, option) => {
+      const override = parsed[option];
+      if (!override) return accumulator;
+      const rpcUrl = override.rpcUrl?.trim();
+      const wsUrl = override.wsUrl?.trim();
+      if (!rpcUrl || !isHttpEndpoint(rpcUrl)) return accumulator;
+      accumulator[option] = {
+        rpcUrl,
+        ...(wsUrl && isWebSocketEndpoint(wsUrl) ? { wsUrl } : {}),
+      };
+      return accumulator;
+    }, {});
+  } catch {
+    return {};
+  }
+}
+
+function persistRpcOverrides() {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(
+    RPC_STORAGE_KEY,
+    JSON.stringify(rpcOverrides.value)
+  );
+}
+
+function syncRpcDraft() {
+  const override = rpcOverrides.value[cluster.value];
+  rpcDraft.rpcUrl = override?.rpcUrl ?? baseConfig.value.rpcUrl;
+  rpcDraft.wsUrl = override?.wsUrl ?? "";
+}
+
+function isHttpEndpoint(value: string) {
+  try {
+    const url = new URL(value);
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
+function isWebSocketEndpoint(value: string) {
+  try {
+    const url = new URL(value);
+    return url.protocol === "ws:" || url.protocol === "wss:";
+  } catch {
+    return false;
+  }
 }
 
 function routeKindFor(path: string): RouteKind {

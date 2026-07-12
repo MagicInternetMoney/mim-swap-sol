@@ -1140,6 +1140,7 @@ import {
   parseClusterParam,
   type ClusterConfig,
   type ClusterName,
+  type RpcOverrideMap,
 } from "../lib/solana.config";
 import {
   buildCollectCpSwapFeesTransaction,
@@ -1193,6 +1194,7 @@ const props = withDefaults(
     walletErrorMessage?: string;
     embedded?: boolean;
     clusterName?: ClusterName;
+    rpcOverrides?: RpcOverrideMap;
     mode?: TreasuryMode;
   }>(),
   {
@@ -1244,7 +1246,9 @@ let timer: ReturnType<typeof setInterval> | undefined;
 let copyTimer: ReturnType<typeof setTimeout> | undefined;
 let transactionRequestId = 0;
 
-const config = computed(() => getClusterConfig(cluster.value));
+const config = computed(() =>
+  getClusterConfig(cluster.value, props.rpcOverrides)
+);
 const connection = computed(() => createConnection(config.value));
 const reserveSymbol = computed(() =>
   cluster.value === "devnet" ? "DMIM" : "MIM"

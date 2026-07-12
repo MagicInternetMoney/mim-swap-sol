@@ -2,7 +2,12 @@
   <canvas
     ref="canvas"
     aria-hidden="true"
-    class="pointer-events-none fixed inset-0 z-0 h-full w-full opacity-[0.72] mix-blend-screen"
+    class="pointer-events-none fixed inset-0 z-0 h-full w-full"
+    :class="
+      theme === 'light'
+        ? 'opacity-50 mix-blend-multiply'
+        : 'opacity-[0.72] mix-blend-screen'
+    "
   />
 </template>
 
@@ -18,6 +23,15 @@ type Particle = {
   color: string;
   phase: number;
 };
+
+withDefaults(
+  defineProps<{
+    theme?: "dark" | "light";
+  }>(),
+  {
+    theme: "dark",
+  }
+);
 
 const canvas = ref<HTMLCanvasElement | null>(null);
 const colors = ["#19f7ff", "#14f195", "#9b5cff", "#ff3dcb", "#fcee09"];
