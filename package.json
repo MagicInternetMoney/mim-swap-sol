@@ -1,44 +1,41 @@
 {
-    "scripts": {
-        "keys:setup": "bash scripts/setup-owned-keys.sh",
-        "devnet:setup-cp-swap": "node scripts/setup-devnet-cp-swap.js",
-        "devnet:setup-lp-metadata": "node scripts/setup-devnet-lp-metadata.js",
-        "devnet:smoke-cp-swap": "node scripts/smoke-devnet-cp-swap.js",
-        "devnet:setup-treasury": "node scripts/setup-devnet-treasury.js",
-        "devnet:fee-keeper": "node scripts/cp-swap-fee-keeper.js",
-        "app:dev": "npm --prefix apps/web run dev",
-        "app:build": "npm --prefix apps/web run build",
-        "app:check": "npm --prefix apps/web run check",
-        "app:test": "npm --prefix apps/web run test",
-        "app:sync-idl": "npm --prefix apps/web run sync:idl",
-        "dex:dev": "npm run app:dev",
-        "dex:build": "npm run app:build",
-        "dex:check": "npm run app:check",
-        "dex:test": "npm run app:test",
-        "dex:sync-idl": "npm run app:sync-idl",
-        "treasury:dev": "npm run app:dev",
-        "treasury:build": "npm run app:build",
-        "treasury:check": "npm run app:check",
-        "treasury:test": "npm run app:test",
-        "treasury:sync-idl": "npm run app:sync-idl",
-        "test:mana-local": "bash scripts/test-mana-local.sh",
-        "test:lp-metadata-local": "bash scripts/test-lp-metadata-local.sh",
-        "test:fee-sweep-local": "bash scripts/test-fee-sweep-local.sh",
-        "lint:fix": "prettier */*.js \"*/**/*{.js,.ts}\" -w",
-        "lint": "prettier */*.js \"*/**/*{.js,.ts}\" --check"
-    },
-    "dependencies": {
-        "@coral-xyz/anchor": "0.32.1",
-        "@solana/spl-token": "^0.4.8"
-    },
-    "devDependencies": {
-        "@types/bn.js": "^5.1.0",
-        "@types/chai": "^4.3.0",
-        "@types/mocha": "^9.0.0",
-        "chai": "^4.3.4",
-        "mocha": "^9.0.3",
-        "prettier": "^2.6.2",
-        "ts-mocha": "^10.0.0",
-        "typescript": "^4.3.5"
-    }
+  "name": "mim-swap",
+  "private": true,
+  "scripts": {
+    "keys:setup": "bash scripts/setup-owned-keys.sh",
+    "devnet:setup-cp-swap": "node scripts/setup-devnet-cp-swap.js",
+    "devnet:setup-lp-metadata": "node scripts/setup-devnet-lp-metadata.js",
+    "devnet:smoke-cp-swap": "node scripts/smoke-devnet-cp-swap.js",
+    "devnet:setup-treasury": "node scripts/setup-devnet-treasury.js",
+    "devnet:fee-keeper": "node scripts/cp-swap-fee-keeper.js",
+    "webapp:dev": "npm --prefix apps/web run dev",
+    "webapp:build": "npm --prefix apps/web run build",
+    "webapp:serve": "npm --prefix apps/web run serve",
+    "webapp:start": "npm run webapp:build && npm run webapp:serve",
+    "webapp:check": "npm --prefix apps/web run check",
+    "webapp:test": "npm --prefix apps/web run test",
+    "webapp:sync-idl": "npm --prefix apps/web run sync:idl",
+    "webapp:docker": "docker compose up --build webapp",
+    "webapp:docker:down": "docker compose down",
+    "test:mana-local": "bash scripts/test-mana-local.sh",
+    "test:lp-metadata-local": "bash scripts/test-lp-metadata-local.sh",
+    "test:fee-sweep-local": "bash scripts/test-fee-sweep-local.sh",
+    "lint:fix": "prettier */*.js \"*/**/*{.js,.ts}\" -w",
+    "lint": "prettier */*.js \"*/**/*{.js,.ts}\" --check"
+  },
+  "dependencies": {
+    "@coral-xyz/anchor": "0.32.1",
+    "@solana/spl-token": "^0.4.8",
+    "@solana/web3.js": "^1.69.0"
+  },
+  "devDependencies": {
+    "@types/bn.js": "^5.1.0",
+    "@types/chai": "^4.3.0",
+    "@types/mocha": "^9.0.0",
+    "chai": "^4.3.4",
+    "mocha": "^9.0.3",
+    "prettier": "^2.6.2",
+    "ts-mocha": "^10.0.0",
+    "typescript": "^4.3.5"
+  }
 }

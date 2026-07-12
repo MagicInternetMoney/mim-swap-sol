@@ -46,6 +46,27 @@ git clone https://github.com/raydium-io/raydium-cp-swap
 cd raydium-cp-swap && yarn && anchor test
 ```
 
+## Unified Webapp
+
+Build and serve the unified webapp with Docker:
+
+```shell
+npm run webapp:docker
+```
+
+Then open `http://localhost:5100/`.
+
+For a direct Node deployment without Docker:
+
+```shell
+cd apps/web
+npm ci
+npm run build
+npm run serve
+```
+
+The npm scripts use the local Astro dependency installed in `node_modules`; do not run `npx astro` on the server.
+
 ## License
 
 Raydium constant product swap is licensed under the Apache License, Version 2.0.

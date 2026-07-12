@@ -1,0 +1,14 @@
+.anchor
+.astro
+.git
+.vscode
+.yarn
+node_modules
+apps/web/.astro
+apps/web/dist
+apps/web/node_modules
+target
+test-ledger
+**/*.rs.bk
+*.log
+.DS_Store

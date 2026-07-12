@@ -7,6 +7,7 @@
     "dev": "astro dev --host 127.0.0.1",
     "build": "astro build",
     "preview": "astro preview --host 127.0.0.1",
+    "serve": "astro preview --host 0.0.0.0 --port 5100",
     "check": "astro check && tsc --noEmit -p tsconfig.test.json",
     "test": "vitest run",
     "sync:idl": "cp ../../target/idl/raydium_cp_swap.json src/idl/raydium_cp_swap.json && cp ../../target/types/raydium_cp_swap.ts src/idl/raydium_cp_swap.ts && cp ../../target/idl/mana_treasury.json src/idl/mana_treasury.json && cp ../../target/types/mana_treasury.ts src/idl/mana_treasury.ts"
@@ -33,7 +34,6 @@
     "@astrojs/check": "^0.9.0",
     "@types/node": "^22.10.0",
     "typescript": "^5.7.0",
-    "vitest": "^2.1.0",
-    "zod": "^3.25.76"
+    "vitest": "^2.1.0"
   }
 }
