@@ -228,6 +228,24 @@ pub mod raydium_cp_swap {
         )
     }
 
+    /// Creates wallet-visible Metaplex metadata for a pool LP mint.
+    ///
+    /// # Arguments
+    ///
+    /// * `ctx` - The context of accounts
+    /// * `name` - Metadata name, max 32 bytes
+    /// * `symbol` - Metadata symbol, max 10 bytes
+    /// * `uri` - Metadata URI, max 200 bytes
+    ///
+    pub fn initialize_lp_metadata(
+        ctx: Context<InitializeLpMetadata>,
+        name: String,
+        symbol: String,
+        uri: String,
+    ) -> Result<()> {
+        instructions::initialize_lp_metadata(ctx, name, symbol, uri)
+    }
+
     /// Deposit lp token to the pool
     ///
     /// # Arguments

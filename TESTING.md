@@ -3,6 +3,7 @@
 This repo has two useful testing layers:
 
 - A focused local integration test for the new Mana treasury vault.
+- A focused local integration test for cp-swap LP token metadata.
 - Lower-level Rust and Anchor checks for the programs.
 
 ## Prerequisites
@@ -54,6 +55,32 @@ local dump explicitly:
 
 ```bash
 TOKEN_METADATA_PROGRAM_SO=/absolute/path/to/metaplex_token_metadata.so yarn test:mana-local
+```
+
+## CP-Swap LP Metadata Local Test
+
+Run:
+
+```bash
+npm run test:lp-metadata-local
+```
+
+This starts a clean local validator with `raydium_cp_swap` and the Metaplex
+Token Metadata program loaded. It creates a CP-swap pool, verifies a non-creator
+cannot initialize LP metadata, then creates a Metaplex metadata PDA for the LP
+mint with:
+
+```text
+name = "MIM Swap LP: DMIM/SMOKE"
+symbol = "DMIM-SMOKE"
+uri = ""
+```
+
+If the first run cannot reach public RPC to dump the Metaplex program, reuse the
+same override supported by the Mana test:
+
+```bash
+TOKEN_METADATA_PROGRAM_SO=/absolute/path/to/metaplex_token_metadata.so npm run test:lp-metadata-local
 ```
 
 ### Port Conflicts

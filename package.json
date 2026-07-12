@@ -2,6 +2,7 @@
     "scripts": {
         "keys:setup": "bash scripts/setup-owned-keys.sh",
         "devnet:setup-cp-swap": "node scripts/setup-devnet-cp-swap.js",
+        "devnet:setup-lp-metadata": "node scripts/setup-devnet-lp-metadata.js",
         "devnet:smoke-cp-swap": "node scripts/smoke-devnet-cp-swap.js",
         "devnet:setup-treasury": "node scripts/setup-devnet-treasury.js",
         "devnet:fee-keeper": "node scripts/cp-swap-fee-keeper.js",
@@ -21,6 +22,7 @@
         "treasury:test": "npm run app:test",
         "treasury:sync-idl": "npm run app:sync-idl",
         "test:mana-local": "bash scripts/test-mana-local.sh",
+        "test:lp-metadata-local": "bash scripts/test-lp-metadata-local.sh",
         "test:fee-sweep-local": "bash scripts/test-fee-sweep-local.sh",
         "lint:fix": "prettier */*.js \"*/**/*{.js,.ts}\" -w",
         "lint": "prettier */*.js \"*/**/*{.js,.ts}\" --check"

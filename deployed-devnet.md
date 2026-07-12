@@ -101,7 +101,23 @@ exist before pools are configured.
    - `treasury_state = <value from target/deploy/devnet-treasury.json>`
    - `mim_mint = <dmimMint from target/deploy/devnet-treasury.json>`
 
-8. Run the fee keeper once, then schedule it every 5 minutes:
+8. After deploying a cp-swap build with the LP metadata instruction, create or
+   repair missing test-asset and LP metadata for pools under the configured AMM
+   config:
+
+   ```bash
+   RPC_URL=https://api.devnet.solana.com \
+   ADMIN_KEYPAIR=target/deploy/mim_admin-keypair.json \
+   DRY_RUN=1 \
+   npm run devnet:setup-lp-metadata
+   ```
+
+   Remove `DRY_RUN=1` to send. The script scans pools under
+   `target/deploy/devnet-cp-swap.json`, simulates before sending, and skips
+   metadata accounts that already exist. To repair a single pool, set
+   `POOL=<pool_address>`.
+
+9. Run the fee keeper once, then schedule it every 5 minutes:
 
    ```bash
    RPC_URL=https://api.devnet.solana.com \
@@ -166,6 +182,8 @@ from `target/deploy/devnet-cp-swap.json`.
 | ----------------------- | ------------------------------------------------------------------------------------------ |
 | Smoke pool              | `2DvuwYkXAqZSGVni6MFrVJuVB7fSZDaDrzH5iUpmVEAm`                                             |
 | Smoke asset mint        | `6martsHjsobTNqPgNEmGs9hzGom7bqGQZoasMhz2P55C`                                             |
+| Smoke LP mint           | `EPcCDQrtNMYqR1Bss8fdknVDBnbm3iyCBmHrFj9HPcTk`                                             |
+| Smoke LP metadata PDA   | `EAeybAXrm5UYheGGihyqPRMVXtJVNA89ExPpSKzxmS11`                                             |
 | Pool trade fee rate     | `50_000`                                                                                   |
 | Initialize tx           | `3bbZn3tNDY916UZwWEWihxnaqQesVCxVMkUMGPUHa5Uebe9K4E8ZN495QauW2nFsGhtujx9CUgNnWkjqBaSebFM5` |
 | Smoke-to-DMIM swap tx   | `64WRAZZ7SWYYCL8sPHBGi2zjYboBvePNdKsGzZS9f3BbANHtcCbvmSqyMu4S5K1zM9iVajkujoxSeQHPbBDMi6as` |
@@ -178,6 +196,27 @@ from `target/deploy/devnet-cp-swap.json`.
 | Asset token vault       | `6QUKZUo1Dg2Vf2KF4EVppXGERt1g7TF2t3i3NMkRTsh7`                                             |
 | Asset vault delta       | `+10_000`                                                                                  |
 
+## 2026-07-11 CP Swap LP Metadata Upgrade And Repair
+
+| Item                  | Value                                                                                      |
+| --------------------- | ------------------------------------------------------------------------------------------ |
+| Program upgrade tx    | `2ETWrGPA1GY9HcgCsDmHdWwNweBGLes6urAHvkuTUBbV8H52SupzTwZnao15WcKfYFCSmRGHinyk9UM5iuDwPji8` |
+| IDL account           | `HBG6sjpgMSaNtiP9AKruRUoHzoPcGWHSh8mArHfL82aL`                                             |
+| Post-upgrade slot     | `475573418`                                                                                |
+| AMM config repaired   | `HDc67djuMJJ8RRPcZU7jnqzAHzDV1PnLBhyPDDsdq3Wc`                                             |
+| Repair dry-run before | `2 pools, 4 missing metadata accounts`                                                     |
+| Repair dry-run after  | `2 pools, 0 missing metadata accounts`                                                     |
+
+| Mint / pool          | Metadata PDA                                   | Name                      | Symbol       | Repair tx                                                                                  |
+| -------------------- | ---------------------------------------------- | ------------------------- | ------------ | ------------------------------------------------------------------------------------------ |
+| `6marts...2P55C`     | `Fbfumd8FegJYvjPRHSJE1wReZ4ias5VwuUaZtAna9qhQ` | `Smoke Test Asset 1`      | `SMOK1`      | `5SYeuoGeJvcqYVPGrLcPGcCkWDr2JrPVtfkVAhZQc1J8puKy65wp7KT7dSoQ33WPrwKYTZjCBy3QtByQvXCSWEri` |
+| `4oEwB...J1h9NEQ`    | `FEYyfUv2yZpNGRREFCDRcqtqt8ZyV8sejs1524AM7oiZ` | `Smoke Test Asset 2`      | `SMOK2`      | `wGQCJMw4nmGy6Gi8E1H2oVnkRDDQ9bMkcp8Tt2X1WDQ6kBcQ27HcFeGtRue3SNJYj6iL2iRbdRZNLBLrkRJWFnA`  |
+| `2Dvuw...mVEAm` LP   | `EAeybAXrm5UYheGGihyqPRMVXtJVNA89ExPpSKzxmS11` | `MIM Swap LP: DMIM/SMOK1` | `DMIM-SMOK1` | `L4W2dUnonRqFgtkZnNGU2i9RTSy7b1PFShjbRPVtYF7T7DMXYMTweJcUzj9cYxpjdezAmt6xB6zxsbmk1vCMBrP`  |
+| `DeaU8...np37h9K` LP | `99LuRMq321hbvLwswkokbZPPs5DRbCx4YMBrf27HxELs` | `MIM Swap LP: DMIM/SMOK2` | `DMIM-SMOK2` | `iJG9u8SC2TbNfcW6zedcPdG4wsR4XkxVLkBrYb3igqmHFwq2DEqhFMMdpgchJGHED7czgRyyYgEL6wWXH1PECTw`  |
+
+Final devnet read-back confirmed metadata exists for all six relevant mints:
+DMIM, Mana, SMOK1, SMOK2, and the two LP mints above.
+
 ## Verification
 
 Run the local checks before deploying:
@@ -188,6 +227,7 @@ cargo test -p mana-treasury --lib
 cargo test -p raydium-cp-swap --lib
 NO_DNA=1 anchor build -p mana_treasury
 npm run test:mana-local
+npm run test:lp-metadata-local
 npm run test:fee-sweep-local
 ```
 
@@ -210,6 +250,9 @@ Expected devnet properties:
   `50_000` (5%).
 - Permissionless pools accept `50_000`; with `protocol_fee_rate = 200_000`, the
   protocol receives 20% of the chosen base fee and LPs retain the remainder.
+- CP-swap LP mints can have Metaplex metadata created by the recorded pool
+  creator. Current devnet smoke LPs read `MIM Swap LP: DMIM/SMOK1` /
+  `DMIM-SMOK1` and `MIM Swap LP: DMIM/SMOK2` / `DMIM-SMOK2`.
 
 ## Mainnet Notes
 

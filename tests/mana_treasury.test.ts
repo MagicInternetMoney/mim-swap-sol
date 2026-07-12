@@ -11,6 +11,7 @@ import {
 } from "@solana/web3.js";
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
+  TOKEN_2022_PROGRAM_ID,
   TOKEN_PROGRAM_ID,
   createMint,
   getAccount,
@@ -492,5 +493,191 @@ describe("mana treasury", () => {
     } catch (_err) {
       assert.ok(true);
     }
+  });
+
+  it("supports Token-2022 reserve mint for deposit and destake", async () => {
+    const treasuryAdmin = Keypair.generate();
+    const airdropSig = await connection.requestAirdrop(
+      treasuryAdmin.publicKey,
+      LAMPORTS_PER_SOL
+    );
+    await connection.confirmTransaction(airdropSig, "confirmed");
+
+    const mimMint = await createMint(
+      connection,
+      treasuryAdmin,
+      treasuryAdmin.publicKey,
+      null,
+      6,
+      undefined,
+      undefined,
+      TOKEN_2022_PROGRAM_ID
+    );
+    const adminMim = await getOrCreateAssociatedTokenAccount(
+      connection,
+      treasuryAdmin,
+      mimMint,
+      treasuryAdmin.publicKey,
+      false,
+      undefined,
+      undefined,
+      TOKEN_2022_PROGRAM_ID
+    );
+    await mintTo(
+      connection,
+      treasuryAdmin,
+      mimMint,
+      adminMim.address,
+      treasuryAdmin,
+      10_000n,
+      [],
+      undefined,
+      TOKEN_2022_PROGRAM_ID
+    );
+
+    const pdas = deriveTreasuryPdas(program.programId, treasuryAdmin.publicKey);
+    await program.methods
+      .initializeTreasury()
+      .accounts({
+        authority: treasuryAdmin.publicKey,
+        treasuryState: pdas.treasuryState,
+        treasuryAuthority: pdas.treasuryAuthority,
+        mimMint,
+        manaMint: pdas.manaMint,
+        activeMimVault: pdas.activeMimVault,
+        pendingMimVault: pdas.pendingMimVault,
+        pendingManaVault: pdas.pendingManaVault,
+        mimTokenProgram: TOKEN_2022_PROGRAM_ID,
+        manaTokenProgram: TOKEN_PROGRAM_ID,
+        systemProgram: SystemProgram.programId,
+      })
+      .signers([treasuryAdmin])
+      .rpc(confirmOptions);
+
+    await program.methods
+      .setCooldownSeconds(new BN(0))
+      .accounts({
+        authority: treasuryAdmin.publicKey,
+        treasuryState: pdas.treasuryState,
+      })
+      .signers([treasuryAdmin])
+      .rpc(confirmOptions);
+
+    const adminMana = getAssociatedTokenAddressSync(
+      pdas.manaMint,
+      treasuryAdmin.publicKey
+    );
+    await program.methods
+      .depositMim(new BN(1_000), new BN(1_000))
+      .accounts({
+        depositor: treasuryAdmin.publicKey,
+        treasuryState: pdas.treasuryState,
+        treasuryAuthority: pdas.treasuryAuthority,
+        mimMint,
+        manaMint: pdas.manaMint,
+        depositorMim: adminMim.address,
+        depositorMana: adminMana,
+        activeMimVault: pdas.activeMimVault,
+        mimTokenProgram: TOKEN_2022_PROGRAM_ID,
+        manaTokenProgram: TOKEN_PROGRAM_ID,
+        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+        systemProgram: SystemProgram.programId,
+      })
+      .signers([treasuryAdmin])
+      .rpc(confirmOptions);
+
+    assert.equal(
+      (await getAccount(connection, adminMana)).amount.toString(),
+      "1000"
+    );
+    assert.equal(
+      (
+        await getAccount(
+          connection,
+          pdas.activeMimVault,
+          undefined,
+          TOKEN_2022_PROGRAM_ID
+        )
+      ).amount.toString(),
+      "1000"
+    );
+
+    const redemption = deriveRedemption(
+      program.programId,
+      pdas.treasuryState,
+      treasuryAdmin.publicKey
+    );
+    await program.methods
+      .startDestake(new BN(250), new BN(250))
+      .accounts({
+        owner: treasuryAdmin.publicKey,
+        treasuryState: pdas.treasuryState,
+        treasuryAuthority: pdas.treasuryAuthority,
+        mimMint,
+        manaMint: pdas.manaMint,
+        ownerMana: adminMana,
+        pendingManaVault: pdas.pendingManaVault,
+        activeMimVault: pdas.activeMimVault,
+        pendingMimVault: pdas.pendingMimVault,
+        redemptionRequest: redemption,
+        mimTokenProgram: TOKEN_2022_PROGRAM_ID,
+        manaTokenProgram: TOKEN_PROGRAM_ID,
+        systemProgram: SystemProgram.programId,
+      })
+      .signers([treasuryAdmin])
+      .rpc(confirmOptions);
+
+    assert.equal(
+      (
+        await getAccount(
+          connection,
+          pdas.pendingMimVault,
+          undefined,
+          TOKEN_2022_PROGRAM_ID
+        )
+      ).amount.toString(),
+      "250"
+    );
+    assert.equal(
+      (await getAccount(connection, pdas.pendingManaVault)).amount.toString(),
+      "250"
+    );
+
+    const mimBeforeFinalize = (
+      await getAccount(
+        connection,
+        adminMim.address,
+        undefined,
+        TOKEN_2022_PROGRAM_ID
+      )
+    ).amount;
+    await program.methods
+      .finalizeDestake()
+      .accounts({
+        owner: treasuryAdmin.publicKey,
+        treasuryState: pdas.treasuryState,
+        treasuryAuthority: pdas.treasuryAuthority,
+        mimMint,
+        manaMint: pdas.manaMint,
+        pendingMimVault: pdas.pendingMimVault,
+        pendingManaVault: pdas.pendingManaVault,
+        ownerMim: adminMim.address,
+        redemptionRequest: redemption,
+        mimTokenProgram: TOKEN_2022_PROGRAM_ID,
+        manaTokenProgram: TOKEN_PROGRAM_ID,
+        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+        systemProgram: SystemProgram.programId,
+      })
+      .signers([treasuryAdmin])
+      .rpc(confirmOptions);
+    const mimAfterFinalize = (
+      await getAccount(
+        connection,
+        adminMim.address,
+        undefined,
+        TOKEN_2022_PROGRAM_ID
+      )
+    ).amount;
+    assert.equal((mimAfterFinalize - mimBeforeFinalize).toString(), "250");
   });
 });

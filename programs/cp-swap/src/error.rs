@@ -44,4 +44,12 @@ pub enum ErrorCode {
     InvalidFeeRecipient,
     #[msg("Invalid treasury fee config")]
     InvalidTreasuryFeeConfig,
+    #[msg("Invalid metadata account")]
+    InvalidMetadataAccount,
+    #[msg("Metadata name is too long")]
+    MetadataNameTooLong,
+    #[msg("Metadata symbol is too long")]
+    MetadataSymbolTooLong,
+    #[msg("Metadata uri is too long")]
+    MetadataUriTooLong,
 }

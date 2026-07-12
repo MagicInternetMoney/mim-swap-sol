@@ -21,6 +21,12 @@ const {
 const { execFileSync } = require("child_process");
 const fs = require("fs");
 const path = require("path");
+const {
+  TOKEN_METADATA_PROGRAM_ID,
+  buildLpMetadata,
+  deriveMetadataPda,
+  readMetadataText,
+} = require("./lp-metadata");
 
 const ROOT_DIR = path.resolve(__dirname, "..");
 const RPC_URL = process.env.RPC_URL || "https://api.devnet.solana.com";
@@ -324,6 +330,11 @@ async function main() {
     [POOL_LP_MINT_SEED, poolAddress.toBuffer()],
     cpProgram.programId
   );
+  const lpMetadata = buildLpMetadata({
+    token0Symbol: "DMIM",
+    token1Symbol: "SMOKE",
+  });
+  const lpMetadataAddress = deriveMetadataPda(lpMint);
   const token0Vault = derivePda(
     [POOL_VAULT_SEED, poolAddress.toBuffer(), token0.mint.toBuffer()],
     cpProgram.programId
@@ -392,6 +403,39 @@ async function main() {
       instructions: [initializeIx],
     }),
   });
+
+  const metadataIx = await cpProgram.methods
+    .initializeLpMetadata(lpMetadata.name, lpMetadata.symbol, lpMetadata.uri)
+    .accounts({
+      creator: admin.publicKey,
+      authority,
+      poolState: poolAddress,
+      lpMint,
+      metadata: lpMetadataAddress,
+      metadataProgram: TOKEN_METADATA_PROGRAM_ID,
+      systemProgram: SystemProgram.programId,
+      rent: SYSVAR_RENT_PUBKEY,
+    })
+    .instruction();
+  signatures.push({
+    action: "initializeLpMetadata",
+    signature: await sendTransactionWithSimulation({
+      connection,
+      payer: admin,
+      label: "initialize DMIM/smoke LP metadata",
+      instructions: [metadataIx],
+    }),
+  });
+  const lpMetadataAccount = await connection.getAccountInfo(
+    lpMetadataAddress,
+    "confirmed"
+  );
+  if (!lpMetadataAccount) {
+    throw new Error(
+      `LP metadata account was not created: ${lpMetadataAddress.toString()}`
+    );
+  }
+  const lpMetadataText = readMetadataText(lpMetadataAccount.data);
   await waitUntilPoolOpen(connection, cpProgram, poolAddress);
 
   async function swapBaseInput(input, output, label) {
@@ -502,6 +546,13 @@ async function main() {
     ammConfig: ammConfig.toString(),
     pool: poolAddress.toString(),
     poolTradeFeeRate: POOL_TRADE_FEE_RATE,
+    lpMetadata: {
+      mint: lpMint.toString(),
+      metadata: lpMetadataAddress.toString(),
+      name: lpMetadataText.name,
+      symbol: lpMetadataText.symbol,
+      uri: lpMetadataText.uri,
+    },
     token0: {
       symbol: token0.symbol,
       mint: token0.mint.toString(),
