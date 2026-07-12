@@ -1,0 +1,24 @@
+[
+  {
+    "cluster": "devnet",
+    "mint": "FBzs4xf4WrtbhUudP6r1pJy9mSxHD6dbqPwKnD5GsZHy",
+    "symbol": "DMIM",
+    "name": "Dev MIM",
+    "decimals": 6,
+    "tokenProgram": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+    "popular": true,
+    "listed": true,
+    "verified": true
+  },
+  {
+    "cluster": "devnet",
+    "mint": "BCrgRHs1nrhvnLHxCyZg4cWfrnFTuJ4j2AEoUgjEbdCZ",
+    "symbol": "MANA",
+    "name": "Mana",
+    "decimals": 6,
+    "tokenProgram": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+    "popular": true,
+    "listed": true,
+    "verified": true
+  }
+]

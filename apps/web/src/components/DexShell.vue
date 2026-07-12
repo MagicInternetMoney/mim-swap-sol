@@ -159,9 +159,15 @@
               v-model:amount="forms.swapAmount"
               v-model:mint="forms.inputMint"
               :tokens="tokenOptions"
+              :balances="selectorBalances"
               :balance="inputBalanceText"
+              :config="config"
+              :disabled-mints="[forms.outputMint]"
+              :pending-mint="customMintLoading"
               @max="setSwapMax"
               @half="setSwapHalf"
+              @request-custom-mint="selectCustomMint('inputMint', $event)"
+              @visible-mints="refreshVisibleBalances"
             />
             <div class="my-2 flex justify-center">
               <button
@@ -178,9 +184,15 @@
               :amount="swapOutputText"
               :mint="forms.outputMint"
               :tokens="tokenOptions"
+              :balances="selectorBalances"
               :readonly-amount="true"
               :balance="outputBalanceText"
+              :config="config"
+              :disabled-mints="[forms.inputMint]"
+              :pending-mint="customMintLoading"
               @update:mint="forms.outputMint = $event"
+              @request-custom-mint="selectCustomMint('outputMint', $event)"
+              @visible-mints="refreshVisibleBalances"
             />
 
             <div
@@ -266,8 +278,38 @@
                 >
               </div>
               <div class="grid gap-3 md:grid-cols-2">
-                <Field label="Token A mint" v-model="forms.createMintA" />
-                <Field label="Token B mint" v-model="forms.createMintB" />
+                <div class="grid gap-2">
+                  <span class="text-xs font-bold text-slate-400">Token A</span>
+                  <TokenSelector
+                    v-model="forms.createMintA"
+                    title="Select token A"
+                    :tokens="tokenOptions"
+                    :balances="selectorBalances"
+                    :config="config"
+                    :disabled-mints="[forms.createMintB]"
+                    :pending-mint="customMintLoading"
+                    @request-custom-mint="
+                      selectCustomMint('createMintA', $event)
+                    "
+                    @visible-mints="refreshVisibleBalances"
+                  />
+                </div>
+                <div class="grid gap-2">
+                  <span class="text-xs font-bold text-slate-400">Token B</span>
+                  <TokenSelector
+                    v-model="forms.createMintB"
+                    title="Select token B"
+                    :tokens="tokenOptions"
+                    :balances="selectorBalances"
+                    :config="config"
+                    :disabled-mints="[forms.createMintA]"
+                    :pending-mint="customMintLoading"
+                    @request-custom-mint="
+                      selectCustomMint('createMintB', $event)
+                    "
+                    @visible-mints="refreshVisibleBalances"
+                  />
+                </div>
                 <Field label="Token A amount" v-model="forms.createAmountA" />
                 <Field label="Token B amount" v-model="forms.createAmountB" />
                 <Field label="Base fee %" v-model="forms.createFeePercent" />
@@ -399,7 +441,7 @@
                     :value="
                       formatSideAmount(
                         pool.sides[0].availableAmount,
-                        pool.sides[0]
+                        pool.sides[0],
                       )
                     "
                   />
@@ -408,7 +450,7 @@
                     :value="
                       formatSideAmount(
                         pool.sides[1].availableAmount,
-                        pool.sides[1]
+                        pool.sides[1],
                       )
                     "
                   />
@@ -462,7 +504,7 @@
                     ? formatTokenAmount(
                         selectedPool.walletLpBalance ?? 0n,
                         9,
-                        6
+                        6,
                       )
                     : '--'
                 "
@@ -539,8 +581,7 @@
         <pre
           v-if="confirmation.simulation.err"
           class="mt-3 max-h-32 overflow-auto whitespace-pre-wrap rounded-lg bg-black/40 p-3 text-xs text-red-100"
-          >{{ errorMessage(confirmation.simulation.err) }}</pre
-        >
+          >{{ errorMessage(confirmation.simulation.err) }}</pre>
         <div class="mt-4 grid grid-cols-2 gap-3">
           <button
             type="button"
@@ -597,6 +638,7 @@ import {
   isDeployedConfig,
   shortAddress,
   type ClusterName,
+  type ClusterConfig,
   type RpcOverrideMap,
 } from "../lib/config";
 import {
@@ -612,7 +654,6 @@ import {
   prepareDexTransaction,
   previewPoolDeposit,
   previewPoolWithdraw,
-  quotePoolSwap,
   selectBestPoolForSwap,
   type PoolSideSnapshot,
   type PoolSnapshot,
@@ -626,9 +667,17 @@ import {
   validatePoolFeeRate,
 } from "../lib/amounts";
 import { positionBasisLabel, savePositionBasis } from "../lib/positions";
+import {
+  buildTokenOptions,
+  type TokenMergeEntry,
+  type TokenOption,
+} from "../lib/token-registry";
+import TokenSelector from "./TokenSelector.vue";
 
 type Tab = "swap" | "pools" | "liquidity" | "portfolio";
 type ActionKind = "swap" | "createPool" | "deposit" | "withdraw";
+type TokenFormField =
+  "inputMint" | "outputMint" | "createMintA" | "createMintB";
 type Confirmation = {
   kind: ActionKind;
   title: string;
@@ -653,7 +702,7 @@ const props = withDefaults(
     embedded: false,
     compact: false,
     liquidityPanel: "all",
-  }
+  },
 );
 const wallet = useWallet();
 const embedded = computed(() => props.embedded);
@@ -672,6 +721,9 @@ const busyAction = ref<ActionKind | null>(null);
 const sending = ref(false);
 const confirmation = ref<Confirmation | null>(null);
 const balances = reactive<Record<string, bigint>>({});
+const balanceLoading = reactive<Record<string, boolean>>({});
+const customTokens = ref<TokenMergeEntry[]>([]);
+const customMintLoading = ref("");
 const forms = reactive({
   inputMint: "",
   outputMint: "",
@@ -694,57 +746,50 @@ const tabs = [
 ];
 
 const config = computed(() =>
-  getClusterConfig(cluster.value, props.rpcOverrides)
+  getClusterConfig(cluster.value, props.rpcOverrides),
 );
 const connection = computed(() => createConnection(config.value));
 const isDeployed = computed(() => isDeployedConfig(config.value));
 const walletConnected = computed(
-  () => wallet.connected.value && Boolean(wallet.publicKey.value)
+  () => wallet.connected.value && Boolean(wallet.publicKey.value),
 );
 const walletStatus = computed(() =>
   wallet.publicKey.value
     ? shortAddress(wallet.publicKey.value.toString(), 5)
-    : "Disconnected"
+    : "Disconnected",
 );
 const selectedPool = computed(
   () =>
     pools.value.find((pool) => pool.address === selectedPoolAddress.value) ??
     pools.value[0] ??
-    null
+    null,
 );
-const tokenOptions = computed(() => {
-  const byMint = new Map<
-    string,
-    { mint: string; symbol: string; decimals: number }
-  >();
-  for (const token of config.value.knownTokens) {
-    byMint.set(token.mint, {
-      mint: token.mint,
-      symbol: token.symbol,
-      decimals: token.decimals,
-    });
-  }
-  for (const pool of pools.value) {
-    for (const side of pool.sides) {
-      byMint.set(side.mint, {
-        mint: side.mint,
-        symbol: side.symbol,
-        decimals: side.decimals,
-      });
-    }
-  }
-  return [...byMint.values()];
-});
+const tokenOptions = computed(() =>
+  buildTokenOptions({
+    cluster: cluster.value,
+    knownTokens: config.value.knownTokens,
+    pools: pools.value,
+    customTokens: customTokens.value,
+  }),
+);
 const inputToken = computed(() =>
-  tokenOptions.value.find((token) => token.mint === forms.inputMint)
+  tokenOptions.value.find((token) => token.mint === forms.inputMint),
 );
 const outputToken = computed(() =>
-  tokenOptions.value.find((token) => token.mint === forms.outputMint)
+  tokenOptions.value.find((token) => token.mint === forms.outputMint),
+);
+const selectorBalances = computed(() =>
+  Object.fromEntries(
+    tokenOptions.value.map((token) => [
+      token.mint,
+      balanceText(token.mint, token.decimals),
+    ]),
+  ),
 );
 const matchingPools = computed(() =>
   forms.inputMint && forms.outputMint
     ? filterPoolsByPair(pools.value, forms.inputMint, forms.outputMint)
-    : []
+    : [],
 );
 const quoteState = computed(() => {
   try {
@@ -757,7 +802,7 @@ const quoteState = computed(() => {
       forms.inputMint,
       forms.outputMint,
       amount,
-      config.value.defaultSlippageBps
+      config.value.defaultSlippageBps,
     );
     return best
       ? { pool: best.pool, quote: best.quote, error: "" }
@@ -771,29 +816,29 @@ const swapOutputText = computed(() =>
     ? formatTokenAmount(
         quoteState.value.quote.outputAmount,
         outputToken.value.decimals,
-        6
+        6,
       )
-    : ""
+    : "",
 );
 const minimumReceivedText = computed(() =>
   quoteState.value.quote && outputToken.value
     ? `${formatTokenAmount(
         quoteState.value.quote.minimumOutputAmount,
         outputToken.value.decimals,
-        6
+        6,
       )} ${outputToken.value.symbol}`
-    : "--"
+    : "--",
 );
 const priceImpactText = computed(() =>
   quoteState.value.quote
     ? formatPercentBps(quoteState.value.quote.priceImpactBps)
-    : "--"
+    : "--",
 );
 const inputBalanceText = computed(() =>
-  balanceText(forms.inputMint, inputToken.value?.decimals)
+  balanceText(forms.inputMint, inputToken.value?.decimals),
 );
 const outputBalanceText = computed(() =>
-  balanceText(forms.outputMint, outputToken.value?.decimals)
+  balanceText(forms.outputMint, outputToken.value?.decimals),
 );
 const swapActionIssue = computed(() => {
   if (!walletConnected.value) return "Connect a wallet.";
@@ -819,11 +864,11 @@ const filteredPools = computed(() => {
     ]
       .join(" ")
       .toLowerCase()
-      .includes(needle)
+      .includes(needle),
   );
 });
 const portfolioPools = computed(() =>
-  pools.value.filter((pool) => (pool.walletLpBalance ?? 0n) > 0n)
+  pools.value.filter((pool) => (pool.walletLpBalance ?? 0n) > 0n),
 );
 const createPoolIssue = computed(() => {
   if (!walletConnected.value) return "Connect a wallet.";
@@ -873,16 +918,16 @@ const depositPreviewText = computed(() => {
     const preview = previewPoolDeposit(
       selectedPool.value,
       parseUiAmount(forms.depositLp, 9),
-      config.value.defaultSlippageBps
+      config.value.defaultSlippageBps,
     );
     return {
       token0: formatSideAmount(
         preview.maxToken0Amount,
-        selectedPool.value.sides[0]
+        selectedPool.value.sides[0],
       ),
       token1: formatSideAmount(
         preview.maxToken1Amount,
-        selectedPool.value.sides[1]
+        selectedPool.value.sides[1],
       ),
     };
   } catch {
@@ -895,16 +940,16 @@ const withdrawPreviewText = computed(() => {
     const preview = previewPoolWithdraw(
       selectedPool.value,
       parseUiAmount(forms.withdrawLp, 9),
-      config.value.defaultSlippageBps
+      config.value.defaultSlippageBps,
     );
     return {
       token0: formatSideAmount(
         preview.minToken0Amount,
-        selectedPool.value.sides[0]
+        selectedPool.value.sides[0],
       ),
       token1: formatSideAmount(
         preview.minToken1Amount,
-        selectedPool.value.sides[1]
+        selectedPool.value.sides[1],
       ),
     };
   } catch {
@@ -920,7 +965,7 @@ watch(
       confirmation.value = null;
       lastSignature.value = "";
     }
-  }
+  },
 );
 
 watch(
@@ -930,7 +975,7 @@ watch(
       activeTab.value = next;
     }
   },
-  { immediate: true }
+  { immediate: true },
 );
 
 watch(
@@ -938,7 +983,7 @@ watch(
   () => {
     void refreshPools();
   },
-  { immediate: true }
+  { immediate: true },
 );
 
 watch(
@@ -947,7 +992,7 @@ watch(
     applyDefaultPair();
     void refreshBalances();
   },
-  { immediate: true }
+  { immediate: true },
 );
 
 onMounted(() => {
@@ -972,7 +1017,7 @@ async function refreshPools() {
     pools.value = await loadPoolSnapshots(
       connection.value,
       config.value,
-      wallet.publicKey.value
+      wallet.publicKey.value,
     );
     selectedPoolAddress.value =
       pools.value.find((pool) => pool.address === DEVNET_SMOKE_POOL)?.address ??
@@ -986,16 +1031,34 @@ async function refreshPools() {
 }
 
 async function refreshBalances() {
+  await refreshTokenBalances([forms.inputMint, forms.outputMint]);
+}
+
+function refreshVisibleBalances(mints: string[]) {
+  void refreshTokenBalances([...mints, forms.inputMint, forms.outputMint]);
+}
+
+async function refreshTokenBalances(mints: string[]) {
   if (!wallet.publicKey.value) return;
-  for (const token of [inputToken.value, outputToken.value]) {
-    if (!token) continue;
-    balances[token.mint] = await loadWalletBalance(token.mint, token.decimals);
+  const uniqueMints = [...new Set(mints.filter(Boolean))];
+  for (const mint of uniqueMints) {
+    const token = tokenOptions.value.find((entry) => entry.mint === mint);
+    if (!token || balanceLoading[token.mint]) continue;
+    balanceLoading[token.mint] = true;
+    try {
+      balances[token.mint] = await loadWalletBalance(
+        token.mint,
+        token.decimals,
+      );
+    } finally {
+      balanceLoading[token.mint] = false;
+    }
   }
 }
 
 async function loadWalletBalance(
   mint: string,
-  _decimals: number
+  _decimals: number,
 ): Promise<bigint> {
   if (!wallet.publicKey.value) return 0n;
   try {
@@ -1004,27 +1067,75 @@ async function loadWalletBalance(
     const mintSnapshot = await loadMintSnapshot(
       connection.value,
       config.value,
-      mint
+      mint,
     );
-    const { getAccount, getAssociatedTokenAddressSync } = await import(
-      "@solana/spl-token"
-    );
+    const { getAccount, getAssociatedTokenAddressSync } =
+      await import("@solana/spl-token");
     const ata = getAssociatedTokenAddressSync(
       new PublicKey(mint),
       wallet.publicKey.value,
       false,
-      new PublicKey(mintSnapshot.tokenProgram)
+      new PublicKey(mintSnapshot.tokenProgram),
     );
     return (
       await getAccount(
         connection.value,
         ata,
         "confirmed",
-        new PublicKey(mintSnapshot.tokenProgram)
+        new PublicKey(mintSnapshot.tokenProgram),
       )
     ).amount;
   } catch {
     return 0n;
+  }
+}
+
+async function selectCustomMint(field: TokenFormField, mint: string) {
+  const token = await addCustomMint(mint);
+  if (!token) return;
+  forms[field] = token.mint;
+  void refreshTokenBalances([token.mint]);
+}
+
+async function addCustomMint(mint: string): Promise<TokenMergeEntry | null> {
+  const normalizedMint = mint.trim();
+  try {
+    new PublicKey(normalizedMint);
+    const existing = tokenOptions.value.find(
+      (token) => token.mint === normalizedMint,
+    );
+    if (existing) return existing;
+
+    customMintLoading.value = normalizedMint;
+    loadError.value = "";
+    const snapshot = await loadMintSnapshot(
+      connection.value,
+      config.value,
+      normalizedMint,
+    );
+    const token: TokenMergeEntry = {
+      cluster: cluster.value,
+      mint: snapshot.mint,
+      symbol: snapshot.symbol,
+      name: snapshot.name,
+      decimals: snapshot.decimals,
+      tokenProgram: snapshot.tokenProgram,
+      popular: false,
+      listed: false,
+      verified: false,
+    };
+    customTokens.value = [
+      ...customTokens.value.filter(
+        (entry) => entry.mint !== token.mint || entry.cluster !== token.cluster,
+      ),
+      token,
+    ];
+    return token;
+  } catch (error) {
+    loadError.value = errorMessage(error);
+    return null;
+  } finally {
+    customMintLoading.value = "";
   }
 }
 
@@ -1033,7 +1144,7 @@ function applyDefaultPair() {
   const reserveMint = config.value.treasury?.reserveMint;
   const pool =
     pools.value.find((candidate) =>
-      candidate.sides.some((side) => side.mint === reserveMint)
+      candidate.sides.some((side) => side.mint === reserveMint),
     ) ?? pools.value[0];
   if (!pool) {
     forms.inputMint = reserveMint ?? "";
@@ -1070,7 +1181,7 @@ function setSwapMax() {
   forms.swapAmount = formatTokenAmount(
     balances[forms.inputMint] ?? 0n,
     inputToken.value.decimals,
-    inputToken.value.decimals
+    inputToken.value.decimals,
   ).replaceAll(",", "");
 }
 
@@ -1079,7 +1190,7 @@ function setSwapHalf() {
   forms.swapAmount = formatTokenAmount(
     (balances[forms.inputMint] ?? 0n) / 2n,
     inputToken.value.decimals,
-    inputToken.value.decimals
+    inputToken.value.decimals,
   ).replaceAll(",", "");
 }
 
@@ -1134,12 +1245,12 @@ async function prepareCreatePool() {
     const mintA = await loadMintSnapshot(
       connection.value,
       config.value,
-      forms.createMintA.trim()
+      forms.createMintA.trim(),
     );
     const mintB = await loadMintSnapshot(
       connection.value,
       config.value,
-      forms.createMintB.trim()
+      forms.createMintB.trim(),
     );
     const amountA = parseUiAmount(forms.createAmountA, mintA.decimals);
     const amountB = parseUiAmount(forms.createAmountB, mintB.decimals);
@@ -1158,7 +1269,7 @@ async function prepareCreatePool() {
         tokenAAmount: amountA,
         tokenBAmount: amountB,
         poolTradeFeeRate,
-      }
+      },
     );
     return {
       title: "Review pool",
@@ -1194,7 +1305,7 @@ async function prepareDeposit() {
     const preview = previewPoolDeposit(
       selectedPool.value as PoolSnapshot,
       lpAmount,
-      config.value.defaultSlippageBps
+      config.value.defaultSlippageBps,
     );
     const tx = await buildDepositTransaction({
       connection: connection.value,
@@ -1214,14 +1325,14 @@ async function prepareDeposit() {
           label: "Token 0 max",
           value: formatSideAmount(
             preview.maxToken0Amount,
-            selectedPool.value!.sides[0]
+            selectedPool.value!.sides[0],
           ),
         },
         {
           label: "Token 1 max",
           value: formatSideAmount(
             preview.maxToken1Amount,
-            selectedPool.value!.sides[1]
+            selectedPool.value!.sides[1],
           ),
         },
       ],
@@ -1230,7 +1341,7 @@ async function prepareDeposit() {
           selectedPool.value as PoolSnapshot,
           preview.token0Amount,
           preview.token1Amount,
-          lpAmount
+          lpAmount,
         );
         forms.depositLp = "";
       },
@@ -1246,7 +1357,7 @@ async function prepareWithdraw() {
     const preview = previewPoolWithdraw(
       selectedPool.value as PoolSnapshot,
       lpAmount,
-      config.value.defaultSlippageBps
+      config.value.defaultSlippageBps,
     );
     const tx = await buildWithdrawTransaction({
       connection: connection.value,
@@ -1266,14 +1377,14 @@ async function prepareWithdraw() {
           label: "Token 0 min",
           value: formatSideAmount(
             preview.minToken0Amount,
-            selectedPool.value!.sides[0]
+            selectedPool.value!.sides[0],
           ),
         },
         {
           label: "Token 1 min",
           value: formatSideAmount(
             preview.minToken1Amount,
-            selectedPool.value!.sides[1]
+            selectedPool.value!.sides[1],
           ),
         },
       ],
@@ -1291,7 +1402,7 @@ async function prepareAction(
     rows: Confirmation["rows"];
     transaction: Transaction;
     afterSend?: () => void;
-  }>
+  }>,
 ) {
   if (!wallet.publicKey.value) return;
   busyAction.value = kind;
@@ -1302,7 +1413,7 @@ async function prepareAction(
     const prepared = await prepareDexTransaction(
       connection.value,
       built.transaction,
-      wallet.publicKey.value
+      wallet.publicKey.value,
     );
     confirmation.value = {
       kind,
@@ -1331,7 +1442,7 @@ async function sendConfirmed() {
     const signature = await wallet.sendTransaction(
       confirmation.value.transaction,
       connection.value,
-      { skipPreflight: false, preflightCommitment: "confirmed" }
+      { skipPreflight: false, preflightCommitment: "confirmed" },
     );
     await connection.value.confirmTransaction(signature, "confirmed");
     lastSignature.value = signature;
@@ -1364,7 +1475,13 @@ function formatSideAmount(amount: bigint, side: PoolSideSnapshot): string {
 }
 
 function balanceText(mint: string, decimals?: number): string {
-  if (!mint || decimals === undefined) return "--";
+  if (!mint || decimals === undefined || !wallet.publicKey.value) return "--";
+  if (
+    balanceLoading[mint] ||
+    !Object.prototype.hasOwnProperty.call(balances, mint)
+  ) {
+    return "--";
+  }
   return formatTokenAmount(balances[mint] ?? 0n, decimals, 6);
 }
 
@@ -1390,13 +1507,27 @@ const TokenAmountPanel = defineComponent({
     amount: { type: String, required: true },
     mint: { type: String, required: true },
     tokens: {
-      type: Array as () => Array<{ mint: string; symbol: string }>,
+      type: Array as () => TokenOption[],
       required: true,
     },
+    balances: {
+      type: Object as () => Record<string, string>,
+      required: true,
+    },
+    config: { type: Object as () => ClusterConfig, required: true },
+    disabledMints: { type: Array as () => string[], default: () => [] },
+    pendingMint: { type: String, default: "" },
     balance: { type: String, default: "--" },
     readonlyAmount: { type: Boolean, default: false },
   },
-  emits: ["update:amount", "update:mint", "max", "half"],
+  emits: [
+    "update:amount",
+    "update:mint",
+    "max",
+    "half",
+    "request-custom-mint",
+    "visible-mints",
+  ],
   setup(panelProps, { emit }) {
     return () =>
       h("div", { class: "rounded-lg border border-white/10 bg-night/55 p-4" }, [
@@ -1409,32 +1540,37 @@ const TokenAmountPanel = defineComponent({
           [
             h("span", panelProps.label),
             h("span", `Balance: ${panelProps.balance}`),
-          ]
+          ],
         ),
-        h("div", { class: "grid grid-cols-[minmax(0,1fr)_150px] gap-3" }, [
-          h("input", {
-            class:
-              "min-w-0 bg-transparent text-2xl font-black outline-none placeholder:text-slate-600",
-            value: panelProps.amount,
-            readonly: panelProps.readonlyAmount,
-            placeholder: "0.00",
-            onInput: (event: Event) =>
-              emit("update:amount", (event.target as HTMLInputElement).value),
-          }),
-          h(
-            "select",
-            {
+        h(
+          "div",
+          { class: "grid grid-cols-[minmax(0,1fr)_minmax(136px,170px)] gap-3" },
+          [
+            h("input", {
               class:
-                "h-11 rounded-lg border border-white/10 bg-panel-2 px-3 text-sm font-black outline-none",
-              value: panelProps.mint,
-              onChange: (event: Event) =>
-                emit("update:mint", (event.target as HTMLSelectElement).value),
-            },
-            panelProps.tokens.map((token) =>
-              h("option", { value: token.mint, key: token.mint }, token.symbol)
-            )
-          ),
-        ]),
+                "min-w-0 bg-transparent text-2xl font-black outline-none placeholder:text-slate-600",
+              value: panelProps.amount,
+              readonly: panelProps.readonlyAmount,
+              placeholder: "0.00",
+              onInput: (event: Event) =>
+                emit("update:amount", (event.target as HTMLInputElement).value),
+            }),
+            h(TokenSelector, {
+              modelValue: panelProps.mint,
+              tokens: panelProps.tokens,
+              balances: panelProps.balances,
+              config: panelProps.config,
+              disabledMints: panelProps.disabledMints,
+              pendingMint: panelProps.pendingMint,
+              title: `Select ${panelProps.label.toLowerCase()} token`,
+              "onUpdate:modelValue": (mint: string) =>
+                emit("update:mint", mint),
+              onRequestCustomMint: (mint: string) =>
+                emit("request-custom-mint", mint),
+              onVisibleMints: (mints: string[]) => emit("visible-mints", mints),
+            }),
+          ],
+        ),
         h("div", { class: "mt-3 flex gap-2" }, [
           h(
             "button",
@@ -1444,7 +1580,7 @@ const TokenAmountPanel = defineComponent({
                 "rounded-md border border-white/10 px-3 py-1 text-xs font-black text-slate-300 hover:bg-white/10",
               onClick: () => emit("max"),
             },
-            "Max"
+            "Max",
           ),
           h(
             "button",
@@ -1454,7 +1590,7 @@ const TokenAmountPanel = defineComponent({
                 "rounded-md border border-white/10 px-3 py-1 text-xs font-black text-slate-300 hover:bg-white/10",
               onClick: () => emit("half"),
             },
-            "50%"
+            "50%",
           ),
         ]),
       ]);
@@ -1473,7 +1609,7 @@ const InfoRow = defineComponent({
         h(
           "span",
           { class: "break-all text-right font-black text-slate-100" },
-          rowProps.value
+          rowProps.value,
         ),
       ]);
   },
@@ -1490,7 +1626,7 @@ const InfoPill = defineComponent({
         h(
           "div",
           { class: "text-xs font-bold text-slate-400" },
-          pillProps.label
+          pillProps.label,
         ),
         h("div", { class: "mt-1 break-all font-black" }, pillProps.value),
       ]);
@@ -1509,7 +1645,7 @@ const Field = defineComponent({
         h(
           "span",
           { class: "mb-1 block text-xs font-bold text-slate-400" },
-          fieldProps.label
+          fieldProps.label,
         ),
         h("input", {
           class:
@@ -1539,7 +1675,7 @@ const PoolSelect = defineComponent({
           onChange: (event: Event) =>
             emit(
               "update:modelValue",
-              (event.target as HTMLSelectElement).value
+              (event.target as HTMLSelectElement).value,
             ),
         },
         selectProps.pools.map((pool) =>
@@ -1548,10 +1684,10 @@ const PoolSelect = defineComponent({
             { value: pool.address, key: pool.address },
             `${pool.sides[0].symbol}/${pool.sides[1].symbol} · ${shortAddress(
               pool.address,
-              5
-            )}`
-          )
-        )
+              5,
+            )}`,
+          ),
+        ),
       );
   },
 });
@@ -1587,12 +1723,12 @@ const PoolRow = defineComponent({
                 h(
                   "h3",
                   { class: "font-black" },
-                  `${rowProps.pool.sides[0].symbol}/${rowProps.pool.sides[1].symbol}`
+                  `${rowProps.pool.sides[0].symbol}/${rowProps.pool.sides[1].symbol}`,
                 ),
                 h(
                   "p",
                   { class: "mt-1 text-xs font-semibold text-slate-400" },
-                  shortAddress(rowProps.pool.address, 6)
+                  shortAddress(rowProps.pool.address, 6),
                 ),
               ]),
               h("div", { class: "flex items-center gap-2" }, [
@@ -1603,12 +1739,12 @@ const PoolRow = defineComponent({
                       "rounded-md border border-white/10 px-3 py-2 text-xs font-black text-slate-300 hover:bg-white/10",
                     href: explorerUrl(
                       rowProps.config as never,
-                      rowProps.pool.address
+                      rowProps.pool.address,
                     ),
                     target: "_blank",
                     rel: "noreferrer",
                   },
-                  "Explorer"
+                  "Explorer",
                 ),
                 h(
                   "button",
@@ -1618,26 +1754,26 @@ const PoolRow = defineComponent({
                       "rounded-md bg-cyan-ray px-3 py-2 text-xs font-black text-slate-950",
                     onClick: () => emit("select"),
                   },
-                  "Use"
+                  "Use",
                 ),
               ]),
-            ]
+            ],
           ),
           h("div", { class: "mt-3 grid gap-2 text-sm sm:grid-cols-4" }, [
             h(
               "span",
               { class: "rounded-md bg-white/5 px-2 py-1" },
-              `Fee ${poolFeeRateToPercent(rowProps.pool.poolTradeFeeRate)}`
+              `Fee ${poolFeeRateToPercent(rowProps.pool.poolTradeFeeRate)}`,
             ),
             h(
               "span",
               { class: "rounded-md bg-white/5 px-2 py-1" },
-              `LP ${formatTokenAmount(rowProps.pool.lpSupply, 9, 2)}`
+              `LP ${formatTokenAmount(rowProps.pool.lpSupply, 9, 2)}`,
             ),
             h(
               "span",
               { class: "rounded-md bg-white/5 px-2 py-1" },
-              rowProps.pool.canSwap ? "Swap on" : "Swap off"
+              rowProps.pool.canSwap ? "Swap on" : "Swap off",
             ),
             h(
               "span",
@@ -1645,11 +1781,11 @@ const PoolRow = defineComponent({
               `Wallet ${formatTokenAmount(
                 rowProps.pool.walletLpBalance ?? 0n,
                 9,
-                4
-              )}`
+                4,
+              )}`,
             ),
           ]),
-        ]
+        ],
       );
   },
 });
@@ -1667,7 +1803,7 @@ const EmptyState = defineComponent({
           class:
             "rounded-lg border border-dashed border-white/15 bg-white/5 p-6 text-center text-sm font-bold text-slate-400",
         },
-        emptyProps.loading ? "Loading" : emptyProps.label
+        emptyProps.loading ? "Loading" : emptyProps.label,
       );
   },
 });
