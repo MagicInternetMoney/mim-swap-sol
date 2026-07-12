@@ -1,0 +1,26 @@
+---
+import MimApp from "../components/MimApp.vue";
+import "../styles/global.css";
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const {
+  title = "MIM Swap",
+  description = "Unified MIM Swap app for swaps, liquidity, treasury reserves, and fee routing.",
+} = Astro.props;
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <title>{title}</title>
+  </head>
+  <body>
+    <MimApp client:only="vue" />
+  </body>
+</html>

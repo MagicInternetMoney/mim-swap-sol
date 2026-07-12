@@ -3,31 +3,73 @@
 # Usage cheatsheet (all commands run from project root)
 #
 # Build program (one-shot container, auto-remove after finish):
-#   docker-compose run --rm solana-dev anchor build
+#   docker compose run --rm solana-dev anchor build
 #
 # Run tests (Anchor tests):
-#   docker-compose run --rm solana-dev anchor test
+#   docker compose run --rm solana-dev anchor test
 #
 # Run a shell inside the dev container:
-#   docker-compose run --rm solana-dev bash
+#   docker compose run --rm solana-dev bash
 #
 # Long-running workflow (keep container running):
-#   docker-compose up -d
-#   docker-compose exec solana-dev anchor build
-#   docker-compose exec solana-dev anchor test
-#   docker-compose exec solana-dev bash
+#   docker compose up -d
+#   docker compose exec solana-dev anchor build
+#   docker compose exec solana-dev anchor test
+#   docker compose exec solana-dev bash
 #
 # Stop container:
-#   docker-compose down
+#   docker compose down
 #
 # Clean containers + volumes (but keep images):
-#   docker-compose down -v
+#   docker compose down -v
+#
+# Run the unified frontend behind nginx:
+#   docker compose up webapp
+#
+# Open:
+#   http://localhost:8080/
 #
 # Note: source code is bind-mounted from the host, Rust caches are
 # stored in Docker volumes to speed up subsequent builds.
 # -------------------------------------------------------------------
 
+x-astro-app: &astro-app
+  image: node:22-alpine
+  expose:
+    - "4321"
+  restart: unless-stopped
+
 services:
+  webapp:
+    image: nginx:1.27-alpine
+    container_name: mim-swap-webapp
+    depends_on:
+      webapp-app:
+        condition: service_healthy
+    ports:
+      - "8080:80"
+    volumes:
+      - ./.docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    restart: unless-stopped
+
+  webapp-app:
+    <<: *astro-app
+    container_name: mim-swap-webapp-app
+    working_dir: /workspace/apps/web
+    command: >
+      sh -c "npm install --no-package-lock --no-audit --no-fund &&
+      npx --no-install astro build &&
+      npx --no-install astro preview --host 0.0.0.0 --port 4321"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1:4321/"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 20s
+    volumes:
+      - .:/workspace
+      - webapp-node-modules:/workspace/apps/web/node_modules
+
   solana-dev:
     image: solanafoundation/anchor:v0.32.1
     container_name: raydium-cpmm-dev
@@ -44,4 +86,4 @@ services:
 volumes:
   rust-cache:
   rust-git-cache:
-
+  webapp-node-modules:

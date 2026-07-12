@@ -1,0 +1,239 @@
+@import "../../node_modules/@solana/wallet-adapter-vue-ui/styles.css";
+@import "tailwindcss";
+
+@theme {
+  --font-sans:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
+  --color-night: #050713;
+  --color-panel: #11152e;
+  --color-panel-2: #19163d;
+  --color-cyan-ray: #19f7ff;
+  --color-orchid: #9b5cff;
+  --color-mint-ray: #14f195;
+  --color-sol-yellow: #fcee09;
+  --color-hot-pink: #ff3dcb;
+  --color-deep-space: #090b1d;
+  --color-ink: #131816;
+  --color-field: #f6f7f2;
+  --color-mana: #0d9488;
+  --color-mim: #2563eb;
+  --color-ember: #c2410c;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.25rem;
+  --radius-2xl: 1.5rem;
+  --radius-3xl: 1.75rem;
+}
+
+@layer components {
+  .mim-shell {
+    @apply min-h-screen bg-night text-slate-100;
+    background:
+      linear-gradient(180deg, rgb(5 7 19 / 0.96), rgb(3 6 17 / 1)),
+      repeating-linear-gradient(
+        90deg,
+        rgb(25 247 255 / 0.035) 0,
+        rgb(25 247 255 / 0.035) 1px,
+        transparent 1px,
+        transparent 88px
+      ),
+      repeating-linear-gradient(
+        0deg,
+        rgb(155 92 255 / 0.03) 0,
+        rgb(155 92 255 / 0.03) 1px,
+        transparent 1px,
+        transparent 72px
+      );
+  }
+
+  .mim-card {
+    @apply rounded-lg border border-white/10 bg-panel/95 shadow-[0_18px_80px_rgba(0,0,0,0.28)];
+    background:
+      linear-gradient(135deg, rgb(25 247 255 / 0.055), transparent 34%),
+      linear-gradient(315deg, rgb(255 61 203 / 0.055), transparent 38%),
+      rgb(17 21 46 / 0.95);
+  }
+
+  .mim-card-muted {
+    @apply rounded-lg border border-white/10 bg-night/60;
+  }
+
+  .mim-field {
+    @apply rounded-lg border border-white/10 bg-night/70 px-3 text-sm font-bold text-slate-100 outline-none transition placeholder:text-slate-600 focus:border-cyan-ray/60;
+  }
+
+  .mim-label {
+    @apply text-xs font-black uppercase tracking-normal text-slate-500;
+  }
+
+  .mim-muted {
+    @apply text-slate-500;
+  }
+
+  .mim-button-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 text-sm font-black text-slate-950 transition disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-400;
+    background: linear-gradient(90deg, #19f7ff, #14f195);
+    box-shadow: 0 0 28px rgb(25 247 255 / 0.22);
+  }
+
+  .mim-button-secondary {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-white/10 bg-white/5 px-4 text-sm font-black text-slate-300 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:text-slate-600;
+  }
+
+  .mim-chip {
+    @apply rounded-md border border-white/10 bg-white/5 px-2 py-1 text-xs font-black text-slate-300;
+  }
+
+  .mim-topbar {
+    @apply sticky top-0 z-30 border-b border-white/10 backdrop-blur;
+    background:
+      linear-gradient(90deg, rgb(25 247 255 / 0.07), transparent 20%),
+      linear-gradient(270deg, rgb(255 61 203 / 0.08), transparent 22%),
+      rgb(5 7 19 / 0.94);
+  }
+
+  .mim-logo {
+    @apply grid size-11 shrink-0 place-items-center rounded-lg text-cyan-ray transition;
+    background:
+      linear-gradient(135deg, rgb(25 247 255 / 0.14), rgb(155 92 255 / 0.16));
+    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.08),
+      0 0 28px rgb(155 92 255 / 0.2);
+  }
+
+  .mim-nav-link {
+    @apply transition hover:text-slate-100;
+  }
+
+  .mim-nav-link-active {
+    color: #19f7ff;
+    text-shadow: 0 0 18px rgb(25 247 255 / 0.4);
+  }
+
+  .mim-colorwave-text {
+    @apply text-transparent bg-clip-text;
+    background-image: linear-gradient(90deg, #19f7ff, #14f195, #fcee09, #ff3dcb, #9b5cff);
+  }
+
+  .mim-colorwave-border {
+    position: relative;
+  }
+
+  .mim-colorwave-border::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(120deg, #19f7ff, #14f195, #fcee09, #ff3dcb, #9b5cff);
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-width: 320px;
+  min-height: 100%;
+  background: #070a18;
+  color: #eef6ff;
+  font-family: var(--font-sans);
+  text-rendering: geometricPrecision;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+  background:
+    linear-gradient(118deg, transparent 0 18%, rgb(25 247 255 / 0.05) 18% 19%, transparent 19% 44%, rgb(252 238 9 / 0.04) 44% 45%, transparent 45% 72%, rgb(255 61 203 / 0.045) 72% 73%, transparent 73%),
+    linear-gradient(180deg, rgb(5 7 19), rgb(3 5 14));
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+.wallet-adapter-button {
+  height: 40px;
+  border-radius: 16px !important;
+  background: linear-gradient(90deg, #19f7ff, #14f195) !important;
+  color: #06111f !important;
+  padding: 0 14px !important;
+  font-size: 0.875rem !important;
+  font-weight: 800 !important;
+}
+
+.wallet-adapter-dropdown-list {
+  border-radius: 16px !important;
+  background: #101633 !important;
+}
+
+.mim-dark-surface {
+  color: #eef6ff;
+}
+
+.mim-dark-surface .bg-white,
+.mim-dark-surface .bg-field {
+  background-color: rgb(16 22 51 / 0.95) !important;
+}
+
+.mim-dark-surface .bg-ink,
+.mim-dark-surface .hover\:bg-black:hover {
+  background-color: #19f7ff !important;
+  color: #06111f !important;
+}
+
+.mim-dark-surface .border-black\/10,
+.mim-dark-surface .ring-black,
+.mim-dark-surface .ring-black\/10 {
+  border-color: rgb(255 255 255 / 0.1) !important;
+  --tw-ring-color: rgb(255 255 255 / 0.1) !important;
+}
+
+.mim-dark-surface .text-ink,
+.mim-dark-surface .text-black\/75,
+.mim-dark-surface .text-black\/70 {
+  color: #e2e8f0 !important;
+}
+
+.mim-dark-surface .text-black\/60,
+.mim-dark-surface .text-black\/55,
+.mim-dark-surface .text-black\/50,
+.mim-dark-surface .text-black\/45,
+.mim-dark-surface .text-black\/40 {
+  color: #64748b !important;
+}
+
+.mim-dark-surface .shadow-sm,
+.mim-dark-surface .shadow-2xl {
+  box-shadow: 0 18px 80px rgb(0 0 0 / 0.28) !important;
+}
+
+.mim-dark-surface input,
+.mim-dark-surface select {
+  background-color: rgb(7 10 24 / 0.7) !important;
+  border-color: rgb(255 255 255 / 0.1) !important;
+  color: #e2e8f0 !important;
+}
+
+.mim-dark-surface input::placeholder {
+  color: #475569 !important;
+}
